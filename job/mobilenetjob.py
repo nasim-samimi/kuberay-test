@@ -1,26 +1,38 @@
 import os
+import torch
 import numpy as np
-from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input, decode_predictions
-from tensorflow.keras.preprocessing import image
+from torchvision import models, transforms
+from PIL import Image
 import ray
 
 # Ray initialization
 ray.init(address='auto')
 
 # Load MobileNetV2 pre-trained model
-model = MobileNetV2(weights="imagenet")
+model = models.mobilenet_v2(pretrained=True)
+model.eval()  # Set the model to evaluation mode
+
+# Preprocessing function for images
+preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+])
 
 # Image inference function
 def infer_image(image_path):
-    img = image.load_img(image_path, target_size=(224, 224))
-    x = image.img_to_array(img)
-    x = np.expand_dims(x, axis=0)
-    x = preprocess_input(x)
+    img = Image.open(image_path)
+    img = preprocess(img)  # Apply preprocessing
+    img = img.unsqueeze(0)  # Add batch dimension
+
+    with torch.no_grad():  # Inference without tracking gradients
+        preds = model(img)
+
+    # Decode predictions (get top-1 prediction)
+    _, predicted_class = torch.max(preds, 1)
     
-    preds = model.predict(x)
-    decoded_preds = decode_predictions(preds, top=1)[0]
-    
-    return decoded_preds
+    return predicted_class.item()
 
 # Example function to load and process images in a directory
 @ray.remote
