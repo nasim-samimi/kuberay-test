@@ -35,7 +35,7 @@ def infer_image(image_path,model):
     # Decode predictions (get top-1 prediction)
     _, predicted_class = torch.max(preds, 1)
     
-    return predicted_class.item()
+    return predicted_class.item(),preds
 
 @ray.remote
 def run_inference_on_directory(image_dir):
@@ -46,7 +46,7 @@ def run_inference_on_directory(image_dir):
     for img_file in os.listdir(image_dir):
         img_path = os.path.join(image_dir, img_file)
         if os.path.isfile(img_path):
-            predictions = infer_image(img_path,model)
+            predicted_class,predictions = infer_image(img_path,model)
             results[img_file] = predictions
     return results
 
