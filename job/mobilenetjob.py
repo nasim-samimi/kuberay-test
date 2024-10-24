@@ -11,10 +11,9 @@ ray.init(address='auto')
 print("Ray initialized")
 
 # Load MobileNetV2 pre-trained model
-model = models.mobilenet_v2(weights=MobileNet_V2_Weights.DEFAULT)
-model.eval()  # Set the model to evaluation mode
 
-model_ref = ray.put(model)
+
+# model_ref = ray.put(model)
 
 # Preprocessing function for images
 preprocess = transforms.Compose([
@@ -39,8 +38,10 @@ def infer_image(image_path,model):
     return predicted_class.item()
 
 @ray.remote
-def run_inference_on_directory(image_dir, model_ref):
-    model = ray.get(model_ref)  # Retrieve the model from the object store
+def run_inference_on_directory(image_dir):
+    model = models.mobilenet_v2(weights=MobileNet_V2_Weights.DEFAULT)
+    model.eval()  # Set the model to evaluation mode
+    # model = ray.get(model_ref)  # Retrieve the model from the object store
     results = {}
     for img_file in os.listdir(image_dir):
         img_path = os.path.join(image_dir, img_file)
@@ -54,7 +55,7 @@ if __name__ == "__main__":
     image_dir = "images/"  # Change to your directory containing images
     print("Running inference on images in directory:", image_dir)
     
-    inference_results = ray.get(run_inference_on_directory.remote(image_dir,model_ref))
+    inference_results = ray.get(run_inference_on_directory.remote(image_dir))
     
     for image_file, prediction in inference_results.items():
         print(f"Image: {image_file}, Prediction: {prediction}")
