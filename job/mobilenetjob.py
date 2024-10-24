@@ -5,6 +5,7 @@ from torchvision import models, transforms
 from torchvision.models import MobileNet_V2_Weights
 from PIL import Image
 import ray
+import time
 
 # Ray initialization
 ray.init(address='auto')
@@ -46,8 +47,10 @@ def run_inference_on_directory(image_dir):
     for img_file in os.listdir(image_dir):
         img_path = os.path.join(image_dir, img_file)
         if os.path.isfile(img_path):
+            start_time = time.time()
             predicted_class,predictions = infer_image(img_path,model)
-            results[img_file] = predictions
+            end_time = time.time()
+            results[img_file] = {"class": predicted_class, "time": end_time - start_time}
     return results
 
 # Main function to run the job
@@ -58,5 +61,5 @@ if __name__ == "__main__":
     inference_results = ray.get(run_inference_on_directory.remote(image_dir))
     
     for image_file, prediction in inference_results.items():
-        print(f"Image: {image_file}, Prediction: {prediction}")
-    print("inference results",inference_results)
+        print(f"Image: {image_file}, Prediction: {prediction["class"]}, Inference Time: {prediction["time"]:.4f} seconds")
+    # print("inference results",inference_results)
