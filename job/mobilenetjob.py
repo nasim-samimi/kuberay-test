@@ -41,7 +41,7 @@ def infer_image(image_path,model):
 @ray.remote
 def run_inference_on_directory(image_dir):
     model = models.mobilenet_v2(weights=MobileNet_V2_Weights.DEFAULT)
-    imagenet_class_index = {int(k): v for k, v in MobileNet_V2_Weights.IMAGENET1K_V1.meta["categories"].items()}
+    # imagenet_class_index = {int(k): v for k, v in MobileNet_V2_Weights.IMAGENET1K_V1.meta["categories"].items()}
     model.eval()  # Set the model to evaluation mode
     # model = ray.get(model_ref)  # Retrieve the model from the object store
     results = {}
@@ -50,10 +50,10 @@ def run_inference_on_directory(image_dir):
         if os.path.isfile(img_path):
             start_time = time.time()
             predicted_class = infer_image(img_path,model)
-            image_class=imagenet_class_index[predicted_class]
+            # image_class=imagenet_class_index[predicted_class]
             end_time = time.time()
 
-            results[img_file] = {"class": image_class, "time": end_time - start_time}
+            results[img_file] = {"class": predicted_class, "time": end_time - start_time}
     return results
 
 # Main function to run the job
