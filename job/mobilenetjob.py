@@ -36,11 +36,12 @@ def infer_image(image_path,model):
     # Decode predictions (get top-1 prediction)
     _, predicted_class = torch.max(preds, 1)
     
-    return predicted_class.item(),preds
+    return predicted_class.item()
 
 @ray.remote
 def run_inference_on_directory(image_dir):
     model = models.mobilenet_v2(weights=MobileNet_V2_Weights.DEFAULT)
+    imagenet_class_index = {int(k): v for k, v in MobileNet_V2_Weights.IMAGENET1K_V1.meta["categories"].items()}
     model.eval()  # Set the model to evaluation mode
     # model = ray.get(model_ref)  # Retrieve the model from the object store
     results = {}
@@ -48,9 +49,11 @@ def run_inference_on_directory(image_dir):
         img_path = os.path.join(image_dir, img_file)
         if os.path.isfile(img_path):
             start_time = time.time()
-            predicted_class,predictions = infer_image(img_path,model)
+            predicted_class = infer_image(img_path,model)
+            image_class=imagenet_class_index[predicted_class]
             end_time = time.time()
-            results[img_file] = {"class": predicted_class, "time": end_time - start_time}
+
+            results[img_file] = {"class": image_class, "time": end_time - start_time}
     return results
 
 # Main function to run the job
@@ -61,5 +64,5 @@ if __name__ == "__main__":
     inference_results = ray.get(run_inference_on_directory.remote(image_dir))
     
     for image_file, prediction in inference_results.items():
-        print(f"Image: {image_file}, Prediction: {prediction["class"]}, Inference Time: {prediction["time"]:.4f} seconds")
+        print(f"Image: {image_file}, Prediction: {prediction['class']}, Inference Time: {prediction['time']:.4f} seconds")
     # print("inference results",inference_results)
