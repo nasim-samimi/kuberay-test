@@ -25,7 +25,7 @@ preprocess = transforms.Compose([
 ])
 
 # Image inference function
-def infer_image(image_path):
+def infer_image(image_path,model):
     img = Image.open(image_path)
     img = preprocess(img)  # Apply preprocessing
     img = img.unsqueeze(0)  # Add batch dimension
@@ -45,7 +45,7 @@ def run_inference_on_directory(image_dir, model_ref):
     for img_file in os.listdir(image_dir):
         img_path = os.path.join(image_dir, img_file)
         if os.path.isfile(img_path):
-            predictions = infer_image(img_path)
+            predictions = infer_image(img_path,model)
             results[img_file] = predictions
     return results
 
