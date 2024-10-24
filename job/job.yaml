@@ -7,9 +7,8 @@ spec:
   entrypoint: python job/mobilenetjob.py
   runtimeEnvYAML: |
     pip:
-      - tensorflow
-      - numpy
-      - python-multipart
+      - torch
+      - torchvision
     working_dir: "https://github.com/nasim-samimi/kuberay-test/archive/refs/heads/main.zip"
     env_vars:
       NUM_WORKERS: "2"
