@@ -56,6 +56,8 @@ if __name__ == "__main__":
     print("Running inference on images in directory:", image_dir)
     
     inference_results = ray.get(run_inference_on_directory.remote(image_dir))
+    print("files in dir:",os.path.listdir(image_dir))
     
     for image_file, prediction in inference_results.items():
         print(f"Image: {image_file}, Prediction: {prediction}")
+    print("inference results",inference_results)
