@@ -52,7 +52,7 @@ def run_inference_on_directory(image_dir):
 
 # Main function to run the job
 if __name__ == "__main__":
-    image_dir = "images/"  # Change to your directory containing images
+    image_dir = "job/images/"  # Change to your directory containing images
     print("Running inference on images in directory:", image_dir)
     
     inference_results = ray.get(run_inference_on_directory.remote(image_dir))
