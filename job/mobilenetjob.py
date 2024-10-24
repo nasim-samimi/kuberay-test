@@ -7,14 +7,17 @@ from PIL import Image
 import ray
 import time
 
+from tensorflow.keras.preprocessing import image
+from tensorflow.keras.applications.mobilenet_v2 import (
+    preprocess_input,
+    decode_predictions,
+    MobileNetV2,
+)
+
 # Ray initialization
 ray.init(address='auto')
 print("Ray initialized")
 
-# Load MobileNetV2 pre-trained model
-
-
-# model_ref = ray.put(model)
 
 # Preprocessing function for images
 preprocess = transforms.Compose([
@@ -23,6 +26,12 @@ preprocess = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
+
+def preprocess_image(image_path): ## this is for tensorflow
+    img = image.load_img(image_path, target_size=(224, 224))  # Load and resize image
+    img_array = image.img_to_array(img)  # Convert to numpy array
+    img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
+    return preprocess_input(img_array)  # Preprocess input for MobileNetV2
 
 # Image inference function
 def infer_image(image_path,model):
@@ -38,10 +47,20 @@ def infer_image(image_path,model):
     
     return predicted_class.item()
 
+def infer_image_tf(image_path, model):
+    img = preprocess_image(image_path)  # Preprocess image
+    preds = model.predict(img)  # Run inference
+
+    # Decode predictions (get top-1 prediction)
+    decoded_preds = decode_predictions(preds, top=1)[0][0]
+    predicted_class = decoded_preds[1]  # Class name
+    return predicted_class, preds
+
 @ray.remote
 def run_inference_on_directory(image_dir):
-    model = models.mobilenet_v2(weights=MobileNet_V2_Weights.DEFAULT)
-    # imagenet_class_index = {int(k): v for k, v in MobileNet_V2_Weights.IMAGENET1K_V1.meta["categories"].items()}
+    # model = models.mobilenet_v2(weights=MobileNet_V2_Weights.DEFAULT)
+    model=MobileNetV2(weights="imagenet")
+
     model.eval()  # Set the model to evaluation mode
     # model = ray.get(model_ref)  # Retrieve the model from the object store
     results = {}
@@ -49,8 +68,8 @@ def run_inference_on_directory(image_dir):
         img_path = os.path.join(image_dir, img_file)
         if os.path.isfile(img_path):
             start_time = time.time()
-            predicted_class = infer_image(img_path,model)
-            # image_class=imagenet_class_index[predicted_class]
+            # predicted_class = infer_image(img_path,model) ## this is for pytorch
+            predicted_class, predictions = infer_image_tf(img_path, model) ## this is for tensorflow
             end_time = time.time()
 
             results[img_file] = {"class": predicted_class, "time": end_time - start_time}
