@@ -7,12 +7,12 @@ from PIL import Image
 import ray
 import time
 
-from tensorflow.keras.preprocessing import image
-from tensorflow.keras.applications.mobilenet_v2 import (
-    preprocess_input,
-    decode_predictions,
-    MobileNetV2,
-)
+# from tensorflow.keras.preprocessing import image
+# from tensorflow.keras.applications.mobilenet_v2 import (
+#     preprocess_input,
+#     decode_predictions,
+#     MobileNetV2,
+# )
 
 # Ray initialization
 ray.init(address='auto')
@@ -68,8 +68,8 @@ def run_inference_on_directory(image_dir):
         img_path = os.path.join(image_dir, img_file)
         if os.path.isfile(img_path):
             start_time = time.time()
-            # predicted_class = infer_image(img_path,model) ## this is for pytorch
-            predicted_class, predictions = infer_image_tf(img_path, model) ## this is for tensorflow
+            predicted_class = infer_image(img_path,model) ## this is for pytorch
+            # predicted_class, predictions = infer_image_tf(img_path, model) ## this is for tensorflow
             end_time = time.time()
 
             results[img_file] = {"class": predicted_class, "time": end_time - start_time}
