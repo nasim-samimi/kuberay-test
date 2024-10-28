@@ -11,6 +11,7 @@ import time
 # Ray initialization
 ray.init(address='auto')
 print("Ray initialized")
+print(torch.__version__)
 
 torch.backends.quantized.engine = 'qnnpack'
 
