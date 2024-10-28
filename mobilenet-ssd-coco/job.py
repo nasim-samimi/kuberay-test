@@ -14,7 +14,6 @@ print("Ray initialized")
 print(torch.__version__)
 
 print(torch.backends.quantized.supported_engines)
-torch.backends.quantized.engine = 'qnnpack'
 
 # Load MobileNet-SSD pre-trained on COCO
 # model = ssd300_vgg16(weights=SSD300_VGG16_Weights.DEFAULT)  # SSD model with VGG16 backbone, pre-trained on COCO
@@ -25,6 +24,10 @@ def load_model():
     model.qconfig = torch.quantization.get_default_qconfig('qnnpack')
     model = torch.quantization.prepare(model, inplace=True)
 
+     # Run the model on a sample input to collect statistics
+    sample_input = torch.rand(1, 3, 300, 300)  # Sample input tensor
+    model(sample_input)  # Forward pass to run observers
+    
     # (Optional) Apply dynamic quantization if needed
     model = torch.quantization.convert(model, inplace=True)
     model.eval()  # Set the model to evaluation mode
