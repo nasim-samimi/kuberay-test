@@ -17,8 +17,8 @@ torch.backends.quantized.engine = 'qnnpack'
 
 # Load MobileNet-SSD pre-trained on COCO
 # model = ssd300_vgg16(weights=SSD300_VGG16_Weights.DEFAULT)  # SSD model with VGG16 backbone, pre-trained on COCO
-model = ssd_mobilenet_v2(weights=SSDMobileNet_V2_Weights.DEFAULT)
-# model = fasterrcnn_mobilenet_v3_large_320_fpn(weights=FasterRCNN_MobileNet_V3_Large_320_FPN_Weights.COCO_V1)
+# model = ssd_mobilenet_v2(weights=SSDMobileNet_V2_Weights.DEFAULT)
+model = fasterrcnn_mobilenet_v3_large_320_fpn(weights=FasterRCNN_MobileNet_V3_Large_320_FPN_Weights.COCO_V1)
 # model = torch.hub.load('ultralytics/yolov5', 'yolov5n', pretrained=True)
 model.eval()  # Set the model to evaluation mode
 model_ref = ray.put(model)
