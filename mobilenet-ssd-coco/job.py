@@ -43,8 +43,7 @@ def detect_objects(image_path, model):
     return results
 
 @ray.remote
-def run_inference_on_directory(image_dir, model_ref):
-    model = ray.get(model_ref)
+def run_inference_on_directory(image_dir, model):
     results = {}
     for img_file in os.listdir(image_dir):
         img_path = os.path.join(image_dir, img_file)
