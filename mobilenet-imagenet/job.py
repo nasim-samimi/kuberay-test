@@ -21,11 +21,19 @@ print("Ray initialized")
 
 # Preprocessing function for images
 preprocess = transforms.Compose([
-    transforms.Resize(256),
-    transforms.CenterCrop(224),
+    transforms.Resize(160),
+    transforms.CenterCrop(160),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
+
+def load_model():
+    # model = models.mobilenet_v2(weights=MobileNet_V2_Weights.DEFAULT)
+    model = models.mobilenet_v2(weights=MobileNet_V2_Weights.IMAGENET1K_V1)
+
+    model.eval()  # Set the model to evaluation mode
+    scripted_model = torch.jit.script(model)
+    return scripted_model
 
 def preprocess_image(image_path): ## this is for tensorflow
     img = image.load_img(image_path, target_size=(224, 224))  # Load and resize image
@@ -49,10 +57,7 @@ def infer_image(image_path,model):
 
 @ray.remote
 def run_inference_on_directory(image_dir):
-    # model = models.mobilenet_v2(weights=MobileNet_V2_Weights.DEFAULT)
-    model = models.mobilenet_v2(weights=MobileNet_V2_Weights.IMAGENET1K_V1)
-
-    model.eval()  # Set the model to evaluation mode
+    model=load_model()
     # model = ray.get(model_ref)  # Retrieve the model from the object store
     results = {}
     for img_file in os.listdir(image_dir):
