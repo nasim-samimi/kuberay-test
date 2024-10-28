@@ -32,8 +32,8 @@ def load_model():
     model = models.mobilenet_v2(weights=MobileNet_V2_Weights.IMAGENET1K_V1)
 
     model.eval()  # Set the model to evaluation mode
-    scripted_model = torch.jit.script(model)
-    return scripted_model
+    # scripted_model = torch.jit.script(model)
+    return model
 
 def preprocess_image(image_path): ## this is for tensorflow
     img = image.load_img(image_path, target_size=(224, 224))  # Load and resize image
