@@ -21,7 +21,6 @@ print(torch.backends.quantized.supported_engines)
 def load_model():
     model = fasterrcnn_mobilenet_v3_large_320_fpn(weights=FasterRCNN_MobileNet_V3_Large_320_FPN_Weights.COCO_V1)
     # Prepare the model for quantization
-    model.train()  
     model.qconfig = torch.quantization.get_default_qconfig('qnnpack')
     model = torch.quantization.prepare(model, inplace=True)
 
