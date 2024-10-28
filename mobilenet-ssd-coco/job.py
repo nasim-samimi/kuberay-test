@@ -26,7 +26,7 @@ def load_model():
 
 # Preprocessing function for images
 preprocess = transforms.Compose([
-    transforms.Resize((224, 224)),
+    transforms.Resize((160, 160)),
     transforms.ToTensor(),
 ])
 
