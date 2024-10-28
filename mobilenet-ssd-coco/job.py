@@ -20,6 +20,7 @@ model = fasterrcnn_mobilenet_v3_large_320_fpn(weights=FasterRCNN_MobileNet_V3_La
 # model = torch.quantization.quantize_dynamic(
 #     model, {torch.nn.Linear}, dtype=torch.qint8
 # )
+model.half()
 model.eval()  # Set the model to evaluation mode
 model_ref = ray.put(model)
 
@@ -34,7 +35,7 @@ def detect_objects(image_path, model):
     # Load and preprocess image with PIL
     start_time_img = time.time()
     img = Image.open(image_path).convert("RGB")  # Ensure RGB format
-    input_tensor = preprocess(img).unsqueeze(0)  # Preprocess and add batch dimension
+    input_tensor = preprocess(img).unsqueeze(0).half()  # Preprocess and add batch dimension
     end_time_img = time.time()
     start_time_det = time.time()
     with torch.no_grad():  # Inference without tracking gradients
