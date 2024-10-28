@@ -11,7 +11,7 @@ ray.init(address='auto')
 print("Ray initialized")
 
 # Load MobileNet-SSD pre-trained on COCO
-model = ssd300_vgg16(pretrained=True)  # SSD model with VGG16 backbone, pre-trained on COCO
+model = ssd300_vgg16(weights=SSD300_VGG16_Weights.DEFAULT)  # SSD model with VGG16 backbone, pre-trained on COCO
 model.eval()  # Set the model to evaluation mode
 model_ref = ray.put(model)
 
@@ -61,7 +61,7 @@ if __name__ == "__main__":
     image_dir = "mobilenet-ssd-coco/images/"  # Change to your directory containing images
     print("Running inference on images in directory:", image_dir)
     
-    inference_results = ray.get(run_inference_on_directory.remote(image_dir))
+    inference_results = ray.get(run_inference_on_directory.remote(image_dir,model_ref))
     
     for image_file, prediction in inference_results.items():
         print(f"Image: {image_file}, Detections: {prediction['detections']}, Inference Time: {prediction['time']:.4f} seconds")
