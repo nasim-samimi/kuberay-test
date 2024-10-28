@@ -19,9 +19,7 @@ torch.backends.quantized.engine = 'qnnpack'
 # model = ssd300_vgg16(weights=SSD300_VGG16_Weights.DEFAULT)  # SSD model with VGG16 backbone, pre-trained on COCO
 # model = ssd_mobilenet_v2(weights=SSDMobileNet_V2_Weights.DEFAULT)
 # model = fasterrcnn_mobilenet_v3_large_320_fpn(weights=FasterRCNN_MobileNet_V3_Large_320_FPN_Weights.COCO_V1)
-model = torch.hub.load('ultralytics/yolov5', 'yolov5n', pretrained=True)
-model.eval()  # Set the model to evaluation mode
-model_ref = ray.put(model)
+# model_ref = ray.put(model)
 
 # Preprocessing function for images
 # preprocess = transforms.Compose([
@@ -49,8 +47,9 @@ model_ref = ray.put(model)
 #             label = detections['labels'][i].item()  # Class label
 #             results.append({"box": box, "label": label, "score": score})
 #     return results
-def detect_objects(image_path, model):
-    # Load image
+def detect_objects(image_path):
+    model = torch.hub.load('ultralytics/yolov5', 'yolov5n', pretrained=True)
+    model.eval()  # Set the model to evaluation mode
     img = Image.open(image_path).convert("RGB")
 
     # Run inference
@@ -73,13 +72,13 @@ def detect_objects(image_path, model):
     return {"detections": output, "time": end_time - start_time}
 
 @ray.remote
-def run_inference_on_directory(image_dir, model):
+def run_inference_on_directory(image_dir):
     results = {}
     for img_file in os.listdir(image_dir):
         img_path = os.path.join(image_dir, img_file)
         if os.path.isfile(img_path):
             start_time = time.time()
-            detections = detect_objects(img_path, model)  # Run object detection
+            detections = detect_objects(img_path)  # Run object detection
             end_time = time.time()
 
             results[img_file] = {"detections": detections, "time": end_time - start_time}
@@ -90,7 +89,7 @@ if __name__ == "__main__":
     image_dir = "mobilenet-ssd-coco/images/"  # Change to your directory containing images
     print("Running inference on images in directory:", image_dir)
     
-    inference_results = ray.get(run_inference_on_directory.remote(image_dir,model_ref))
+    inference_results = ray.get(run_inference_on_directory.remote(image_dir))
     
     for image_file, prediction in inference_results.items():
         print(f"Image: {image_file}, Detections: {prediction['detections']}, Inference Time: {prediction['time']:.4f} seconds")
