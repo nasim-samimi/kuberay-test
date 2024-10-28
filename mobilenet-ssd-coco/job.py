@@ -17,12 +17,10 @@ torch.backends.quantized.engine = 'qnnpack'
 # model = ssd300_vgg16(weights=SSD300_VGG16_Weights.DEFAULT)  # SSD model with VGG16 backbone, pre-trained on COCO
 # model = ssd_mobilenet_v2(weights=SSDMobileNet_V2_Weights.COCO_V1)
 model = fasterrcnn_mobilenet_v3_large_320_fpn(weights=FasterRCNN_MobileNet_V3_Large_320_FPN_Weights.COCO_V1)
-# model = torch.quantization.quantize_dynamic(
-#     model, {torch.nn.Linear}, dtype=torch.qint8
-# )
+model = torch.quantization.quantize_dynamic(
+    model, {torch.nn.Linear}, dtype=torch.qint8
+)
 
-model.qconfig = torch.quantization.get_default_qconfig('qnnpack')
-model = torch.quantization.prepare(model, inplace=True)
 # model.half()
 model.eval()  # Set the model to evaluation mode
 model_ref = ray.put(model)
