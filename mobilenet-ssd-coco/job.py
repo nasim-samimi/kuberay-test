@@ -25,14 +25,10 @@ def load_model():
     model.qconfig = torch.quantization.get_default_qconfig('qnnpack')
     model = torch.quantization.prepare(model, inplace=True)
 
-     # Run the model on a sample input to collect statistics
-    sample_input = torch.rand(1, 3, 300, 300)  # Sample input tensor
-    model(sample_input)  # Forward pass to run observers
-
     # (Optional) Apply dynamic quantization if needed
-    
-    model.eval()  # Set the model to evaluation mode
     model = torch.quantization.convert(model, inplace=True)
+        
+    model.eval()  # Set the model to evaluation mode
     return model
 # model_ref = ray.put(model)
 
