@@ -2,7 +2,7 @@ import os
 import torch
 from torchvision import transforms
 import torch.quantization
-from torchvision.models.detection import ssd_mobilenet_v2, SSDMobileNet_V2_Weights # ssd300_vgg16, SSD300_VGG16_Weights # SSD model in PyTorch
+from torchvision.models.detection import fasterrcnn_mobilenet_v3_large_320_fpn, FasterRCNN_MobileNet_V3_Large_320_FPN_Weights #ssd_mobilenet_v2, SSDMobileNet_V2_Weights # ssd300_vgg16, SSD300_VGG16_Weights # SSD model in PyTorch
 from PIL import Image
 import ray
 import time
@@ -13,7 +13,8 @@ print("Ray initialized")
 
 # Load MobileNet-SSD pre-trained on COCO
 # model = ssd300_vgg16(weights=SSD300_VGG16_Weights.DEFAULT)  # SSD model with VGG16 backbone, pre-trained on COCO
-model = ssd_mobilenet_v2(weights=SSDMobileNet_V2_Weights.COCO_V1)
+# model = ssd_mobilenet_v2(weights=SSDMobileNet_V2_Weights.COCO_V1)
+model = fasterrcnn_mobilenet_v3_large_320_fpn(weights=FasterRCNN_MobileNet_V3_Large_320_FPN_Weights.COCO_V1)
 model = torch.quantization.quantize_dynamic(
     model, {torch.nn.Linear}, dtype=torch.qint8
 )
