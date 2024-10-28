@@ -6,8 +6,8 @@ spec:
   shutdownAfterJobFinishes: false
   entrypoint: python mobilenet-ssd-coco/job.py
   runtimeEnvYAML: |
-    pip:
-      - opencv-python-headless
+    # pip:
+      # - opencv-python-headless
     #  - torch
     #  - torchvision
     #  - numpy

@@ -13,6 +13,7 @@ ray.init(address='auto')
 print("Ray initialized")
 print(torch.__version__)
 
+print(torch.backends.quantized.supported_engines)
 torch.backends.quantized.engine = 'fbgemm'
 
 # Load MobileNet-SSD pre-trained on COCO
