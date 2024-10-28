@@ -24,7 +24,7 @@ model_ref = ray.put(model)
 
 # Preprocessing function for images
 preprocess = transforms.Compose([
-    transforms.Resize((224, 224)),
+    transforms.Resize((128, 128)),
     transforms.ToTensor(),
 ])
 

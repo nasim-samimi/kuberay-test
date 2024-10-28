@@ -55,8 +55,8 @@ spec:
                 image: nasimm/mobilenet-serve:latest
                 resources:
                   limits:
-                    cpu: "500m"
+                    cpu: "1"
                     memory: "5Gi"
                   requests:
-                    cpu: "500m"
+                    cpu: "1"
                     memory: "4Gi"
