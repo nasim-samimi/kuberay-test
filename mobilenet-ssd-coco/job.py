@@ -13,7 +13,7 @@ ray.init(address='auto')
 print("Ray initialized")
 print(torch.__version__)
 
-torch.backends.quantized.engine = 'qnnpack'
+torch.backends.quantized.engine = 'fbgemm'
 
 # Load MobileNet-SSD pre-trained on COCO
 # model = ssd300_vgg16(weights=SSD300_VGG16_Weights.DEFAULT)  # SSD model with VGG16 backbone, pre-trained on COCO
