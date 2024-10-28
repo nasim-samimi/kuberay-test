@@ -19,15 +19,17 @@ torch.backends.quantized.engine = 'qnnpack'
 # Load MobileNet-SSD pre-trained on COCO
 # model = ssd300_vgg16(weights=SSD300_VGG16_Weights.DEFAULT)  # SSD model with VGG16 backbone, pre-trained on COCO
 # model = ssd_mobilenet_v2(weights=SSDMobileNet_V2_Weights.DEFAULT)
-model = fasterrcnn_mobilenet_v3_large_320_fpn(weights=FasterRCNN_MobileNet_V3_Large_320_FPN_Weights.COCO_V1)
-# Prepare the model for quantization
-model.qconfig = torch.quantization.get_default_qconfig('qnnpack')
-model = torch.quantization.prepare(model, inplace=True)
+def load_model():
+    model = fasterrcnn_mobilenet_v3_large_320_fpn(weights=FasterRCNN_MobileNet_V3_Large_320_FPN_Weights.COCO_V1)
+    # Prepare the model for quantization
+    model.qconfig = torch.quantization.get_default_qconfig('qnnpack')
+    model = torch.quantization.prepare(model, inplace=True)
 
-# (Optional) Apply dynamic quantization if needed
-model = torch.quantization.convert(model, inplace=True)
-model.eval()  # Set the model to evaluation mode
-model_ref = ray.put(model)
+    # (Optional) Apply dynamic quantization if needed
+    model = torch.quantization.convert(model, inplace=True)
+    model.eval()  # Set the model to evaluation mode
+    return model
+# model_ref = ray.put(model)
 
 # Preprocessing function for images
 preprocess = transforms.Compose([
@@ -36,8 +38,9 @@ preprocess = transforms.Compose([
 ])
 
 # Detection function
-def detect_objects(image_path, model):
+def detect_objects(image_path):
     # Load and preprocess image with PIL
+    model = load_model() 
     start_time_img = time.time()
     img = Image.open(image_path).convert("RGB")  # Ensure RGB format
     input_tensor = preprocess(img).unsqueeze(0)  # Preprocess and add batch dimension
@@ -80,12 +83,12 @@ def detect_objects(image_path, model):
 #     return {"detections": output, "inference time": end_time - start_time}
 
 @ray.remote
-def run_inference_on_directory(image_dir, model_ref):
+def run_inference_on_directory(image_dir):
     results = {}
     for img_file in os.listdir(image_dir):
         img_path = os.path.join(image_dir, img_file)
         if os.path.isfile(img_path):
-            detections = detect_objects(img_path,model_ref)  # Run object detection
+            detections = detect_objects(img_path)  # Run object detection
             results[img_file] = {"detections": detections}
     return results
 
@@ -94,7 +97,7 @@ if __name__ == "__main__":
     image_dir = "mobilenet-ssd-coco/images/"  # Change to your directory containing images
     print("Running inference on images in directory:", image_dir)
     
-    inference_results = ray.get(run_inference_on_directory.remote(image_dir,model_ref))
+    inference_results = ray.get(run_inference_on_directory.remote(image_dir))
     
     for image_file, prediction in inference_results.items():
         print(f"Image: {image_file}, Detections: {prediction['detections']}")
