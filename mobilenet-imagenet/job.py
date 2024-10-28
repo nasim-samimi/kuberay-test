@@ -50,7 +50,7 @@ def infer_image(image_path,model):
 @ray.remote
 def run_inference_on_directory(image_dir):
     # model = models.mobilenet_v2(weights=MobileNet_V2_Weights.DEFAULT)
-    model=MobileNetV2(weights="imagenet")
+    model = models.mobilenet_v2(weights=MobileNet_V2_Weights.IMAGENET1K_V1)
 
     model.eval()  # Set the model to evaluation mode
     # model = ray.get(model_ref)  # Retrieve the model from the object store
