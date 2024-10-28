@@ -3,7 +3,7 @@ import torch
 from torchvision import transforms
 import torch.quantization
 from torchvision.models.detection import fasterrcnn_mobilenet_v3_large_320_fpn, FasterRCNN_MobileNet_V3_Large_320_FPN_Weights
-from torchvision.models.detection import ssd_mobilenet_v2, SSDMobileNet_V2_Weights # ssd300_vgg16, SSD300_VGG16_Weights # SSD model in PyTorch
+# from torchvision.models.detection import ssd_mobilenet_v2, SSDMobileNet_V2_Weights # ssd300_vgg16, SSD300_VGG16_Weights # SSD model in PyTorch
 from PIL import Image
 import ray
 import time
