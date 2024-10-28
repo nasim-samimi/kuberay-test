@@ -1,7 +1,7 @@
 import os
 import torch
 from torchvision import transforms
-from torchvision.models.detection import ssd300_vgg16  # SSD model in PyTorch
+from torchvision.models.detection import ssd300_vgg16 , SSD300_VGG16_Weights # SSD model in PyTorch
 from PIL import Image
 import ray
 import time
