@@ -13,6 +13,7 @@ print("Ray initialized")
 # Load MobileNet-SSD pre-trained on COCO
 model = ssd300_vgg16(pretrained=True)  # SSD model with VGG16 backbone, pre-trained on COCO
 model.eval()  # Set the model to evaluation mode
+model_ref = ray.put(model)
 
 # Preprocessing function for images
 preprocess = transforms.Compose([
@@ -23,12 +24,14 @@ preprocess = transforms.Compose([
 # Detection function
 def detect_objects(image_path, model):
     # Load and preprocess image with PIL
+    start_time_img = time.time()
     img = Image.open(image_path).convert("RGB")  # Ensure RGB format
     input_tensor = preprocess(img).unsqueeze(0)  # Preprocess and add batch dimension
-
+    end_time_img = time.time()
+    start_time_det = time.time()
     with torch.no_grad():  # Inference without tracking gradients
         detections = model(input_tensor)[0]  # Get detections for the image
-
+    end_time_det = time.time()
     # Process detections: extract bounding boxes, labels, and scores
     results = []
     for i in range(len(detections['boxes'])):
@@ -40,7 +43,8 @@ def detect_objects(image_path, model):
     return results
 
 @ray.remote
-def run_inference_on_directory(image_dir):
+def run_inference_on_directory(image_dir, model_ref):
+    model = ray.get(model_ref)
     results = {}
     for img_file in os.listdir(image_dir):
         img_path = os.path.join(image_dir, img_file)
