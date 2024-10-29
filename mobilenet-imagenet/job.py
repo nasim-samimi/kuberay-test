@@ -6,6 +6,7 @@ from torchvision.models import MobileNet_V2_Weights
 from PIL import Image
 import ray
 import time
+import pandas as pd
 
 # from tensorflow.keras.preprocessing import image
 # from tensorflow.keras.applications.mobilenet_v2 import (
@@ -61,8 +62,7 @@ def run_inference_on_directory(image_dir):
     # model = ray.get(model_ref)  # Retrieve the model from the object store
     results = {}
     response_times = []
-    response_times_dir = "/response_times"
-    response_times_path = os.path.join(response_times_dir, "response_times.txt")
+    response_times_path = os.getenv("RESPONSE_TIME_PATH", "/tmp/response_times.csv")
 
 # Check if the directory exists, and create it if not
     i=0
@@ -79,9 +79,10 @@ def run_inference_on_directory(image_dir):
         i+=1
         if i==10:
             break
-    with open(response_times_path, "a") as f:
-        for rt in response_times:
-            f.write(f"{rt}\n")  
+
+    # Save response times to a CSV file
+    pd.DataFrame(response_times, columns=["response_time"]).to_csv(response_times_path, index=False) 
+
     return results
 
 # Main function to run the job

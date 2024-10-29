@@ -7,7 +7,8 @@ spec:
   entrypoint: |
     python mobilenet-imagenet/job.py
   runtimeEnvYAML: |
-    #pip:
+    pip:
+      - pandas
     #  - torch
     #  - torchvision
     #  - numpy
@@ -64,14 +65,9 @@ spec:
                   requests:
                     cpu: "500m"
                     memory: "2Gi"
-                volumeMounts:
-                  - name: response-time-volume
-                    mountPath: /response_times
-            volumes:
-              - name: response-time-volume
-                hostPath:
-                  path: /mnt/data
-                  type: DirectoryOrCreate
+                env:
+                  - name: RESPONSE_TIME_PATH
+                    value: "/tmp/response_times.txt"
 
 ---
 apiVersion: resource.k8s.io/v1alpha2
