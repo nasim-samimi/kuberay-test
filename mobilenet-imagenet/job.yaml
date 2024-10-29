@@ -42,6 +42,14 @@ spec:
                 requests:
                   cpu: "1"
                   memory: "1500Mi"
+              volumeMounts:
+                - name: response-time-volume
+                  mountPath: /tmp  # Mount hostPath volume to /tmp in the container
+          volumes:
+            - name: response-time-volume
+              hostPath:
+                path: /tmp  # Path on the host node
+                type: DirectoryOrCreate
     workerGroupSpecs:
       - replicas: 2
         minReplicas: 1
