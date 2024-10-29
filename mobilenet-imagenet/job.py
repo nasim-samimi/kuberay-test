@@ -61,7 +61,13 @@ def run_inference_on_directory(image_dir):
     # model = ray.get(model_ref)  # Retrieve the model from the object store
     results = {}
     response_times = []
-    response_times_path = "/response_times/response_times.txt"
+    response_times_dir = "/response_times"
+    response_times_path = os.path.join(response_times_dir, "response_times.txt")
+
+# Check if the directory exists, and create it if not
+    if not os.path.exists(response_times_dir):
+        os.makedirs(response_times_dir)
+        print(f"Created directory: {response_times_dir}")
     i=0
     for img_file in os.listdir(image_dir):
         img_path = os.path.join(image_dir, img_file)
