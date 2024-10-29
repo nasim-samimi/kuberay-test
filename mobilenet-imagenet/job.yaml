@@ -47,12 +47,12 @@ spec:
                   value: "/tmp/response_times.csv"
               volumeMounts:
                 - name: response-time-volume
-                  mountPath: /tmp/response_times.csv  # Mount hostPath volume to /tmp in the container
+                  mountPath: /tmp  # Mount hostPath volume to /tmp in the container
           volumes:
             - name: response-time-volume
               hostPath:
-                path: /home/master/response_times.csv  # Path on the host node
-                type: FileOrCreate
+                path: /home/master/ray  # Path on the host node
+                type: DirectoryOrCreate
     workerGroupSpecs:
       - replicas: 2
         minReplicas: 1
