@@ -81,11 +81,14 @@ def run_inference_on_directory(image_dir):
             break
 
     # Save response times to a CSV file
-    pd.DataFrame(response_times, columns=["response_time"]).to_csv(response_times_path, index=False) 
+    try:
+        pd.DataFrame(response_times, columns=["response_time"]).to_csv(response_times_path, index=False)
+        print("Response times saved successfully.")
+    except Exception as e:
+        print(f"Error saving response times: {e}")
 
     return results
 
-# Main function to run the job
 if __name__ == "__main__":
     image_dir = "mobilenet-imagenet/images/test/"  # Change to your directory containing images
     print("Running inference on images in directory:", image_dir)
