@@ -67,7 +67,7 @@ spec:
                     memory: "2Gi"
                 env:
                   - name: RESPONSE_TIME_PATH
-                    value: "/tmp/response_times.txt"
+                    value: "/tmp/response_times.csv"
 
 ---
 apiVersion: resource.k8s.io/v1alpha2
