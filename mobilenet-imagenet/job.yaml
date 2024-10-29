@@ -64,6 +64,14 @@ spec:
                   requests:
                     cpu: "500m"
                     memory: "2Gi"
+                volumeMounts:
+                  - name: response-time-volume
+                    mountPath: /response_times
+            volumes:
+              - name: response-time-volume
+                hostPath:
+                  path: /mnt/data
+                  type: DirectoryOrCreate
 
 ---
 apiVersion: resource.k8s.io/v1alpha2

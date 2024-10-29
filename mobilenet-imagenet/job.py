@@ -60,6 +60,8 @@ def run_inference_on_directory(image_dir):
     model=load_model()
     # model = ray.get(model_ref)  # Retrieve the model from the object store
     results = {}
+    response_times = []
+    response_times_path = "/response_times/response_times.txt"
     i=0
     for img_file in os.listdir(image_dir):
         img_path = os.path.join(image_dir, img_file)
@@ -70,10 +72,13 @@ def run_inference_on_directory(image_dir):
             end_time = time.time()
 
             results[img_file] = {"class": predicted_class, "time": end_time - start_time}
+            response_times.append(end_time - start_time)
         i+=1
         if i==10:
             break
-        
+    with open(response_times_path, "a") as f:
+        for time in response_times:
+            f.write(f"{time}\n")  
     return results
 
 # Main function to run the job
