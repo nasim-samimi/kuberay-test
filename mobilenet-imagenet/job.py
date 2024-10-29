@@ -62,7 +62,7 @@ def run_inference_on_directory(image_dir):
     # model = ray.get(model_ref)  # Retrieve the model from the object store
     results = {}
     response_times = []
-    response_times_path = os.getenv("RESPONSE_TIME_PATH", "/data/response_times.csv")
+    response_times_path = os.getenv("RESPONSE_TIME_PATH", "/response_times.csv")
 
 # Check if the directory exists, and create it if not
     i=0

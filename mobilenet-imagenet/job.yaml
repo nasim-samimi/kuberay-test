@@ -67,10 +67,10 @@ spec:
                     memory: "2Gi"
                 env:
                   - name: RESPONSE_TIME_PATH
-                    value: "/data/response_times.csv"
+                    value: "/response_times.csv"
                 volumeMounts:
                   - name: response-time-volume
-                    mountPath: /data  # Mount hostPath volume to /tmp in the container
+                    mountPath: /  # Mount hostPath volume to /tmp in the container
             volumes:
               - name: response-time-volume
                 hostPath:
