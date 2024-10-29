@@ -67,14 +67,14 @@ spec:
                     memory: "2Gi"
                 env:
                   - name: RESPONSE_TIME_PATH
-                    value: "/tmp/response_times.csv"
+                    value: "/data/response_times.csv"
                 volumeMounts:
                   - name: response-time-volume
-                    mountPath: /tmp  # Mount hostPath volume to /tmp in the container
+                    mountPath: /data  # Mount hostPath volume to /tmp in the container
             volumes:
               - name: response-time-volume
                 hostPath:
-                  path: /tmp  # Path on the host node
+                  path: /home/master  # Path on the host node
                   type: DirectoryOrCreate
 ---
 apiVersion: resource.k8s.io/v1alpha2
