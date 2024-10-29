@@ -60,6 +60,7 @@ def run_inference_on_directory(image_dir):
     model=load_model()
     # model = ray.get(model_ref)  # Retrieve the model from the object store
     results = {}
+    i=0
     for img_file in os.listdir(image_dir):
         img_path = os.path.join(image_dir, img_file)
         if os.path.isfile(img_path):
@@ -69,11 +70,15 @@ def run_inference_on_directory(image_dir):
             end_time = time.time()
 
             results[img_file] = {"class": predicted_class, "time": end_time - start_time}
+        i+=1
+        if i==10:
+            break
+        
     return results
 
 # Main function to run the job
 if __name__ == "__main__":
-    image_dir = "mobilenet-imagenet/images/"  # Change to your directory containing images
+    image_dir = "mobilenet-imagenet/images/test/"  # Change to your directory containing images
     print("Running inference on images in directory:", image_dir)
     
     inference_results = ray.get(run_inference_on_directory.remote(image_dir))
