@@ -74,7 +74,7 @@ spec:
             volumes:
               - name: response-time-volume
                 hostPath:
-                  path: /mnt/data  # Path on the host node
+                  path: /tmp  # Path on the host node
                   type: DirectoryOrCreate
 ---
 apiVersion: resource.k8s.io/v1alpha2
