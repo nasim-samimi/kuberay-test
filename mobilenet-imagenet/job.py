@@ -77,8 +77,8 @@ def run_inference_on_directory(image_dir):
         if i==10:
             break
     with open(response_times_path, "a") as f:
-        for time in response_times:
-            f.write(f"{time}\n")  
+        for rt in response_times:
+            f.write(f"{rt}\n")  
     return results
 
 # Main function to run the job
