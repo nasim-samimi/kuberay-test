@@ -42,7 +42,7 @@ for JOB_FILE in "$JOB_FOLDER"/*.yaml; do
     
     # Wait for the Ray job to complete
     echo "Waiting for Ray job $JOB_NAME to complete..."
-    kubectl wait --for=condition=complete rayjob/"$JOB_NAME" 
+    kubectl wait --for=condition=complete rayjob/"$JOB_NAME" --timeout=1h
 
     echo "Stopping stress-ng process with PID $STRESS_PID..."
     kill $STRESS_PID
