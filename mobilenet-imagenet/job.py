@@ -77,7 +77,7 @@ def run_inference_on_directory(image_dir):
             results[img_file] = {"class": predicted_class, "time": end_time - start_time}
             response_times.append(end_time - start_time)
         i+=1
-        if i==10:
+        if i==100:
             break
 
     # Save response times to a CSV file
