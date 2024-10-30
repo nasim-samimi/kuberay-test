@@ -5,17 +5,16 @@ metadata:
 spec:
   shutdownAfterJobFinishes: false
   entrypoint: |
-    export DNS_SERVER=8.8.8.8
     python mobilenet-imagenet/job.py
   runtimeEnvYAML: |
-    #pip:
-    #  - torch
+    pip:
+      - pandas
     #  - torchvision
     #  - numpy
     working_dir: "https://github.com/nasim-samimi/kuberay-test/archive/refs/heads/main.zip"
-    env_vars:
-      NUM_WORKERS: "2"
-      CPUS_PER_WORKER: "2"
+    # env_vars:
+    #   NUM_WORKERS: "2"
+    #   CPUS_PER_WORKER: "2"
 
   # rayClusterSpec specifies the RayCluster instance to be created by the RayJob controller.
   rayClusterSpec:
@@ -42,8 +41,19 @@ spec:
                 requests:
                   cpu: "1"
                   memory: "2Gi"
+              env:
+                - name: RESPONSE_TIME_PATH
+                  value: "/tmp/response_times_20_hcbs.csv"
+              volumeMounts:
+                - name: response-time-volume
+                  mountPath: /tmp  # Mount hostPath volume to /tmp in the container
+          volumes:
+            - name: response-time-volume
+              hostPath:
+                path: /tmp/ray  # Path on the host node
+                type: DirectoryOrCreate
     workerGroupSpecs:
-      - replicas: 2
+      - replicas: 4
         minReplicas: 1
         maxReplicas: 10
         groupName: small-group
@@ -51,13 +61,41 @@ spec:
         # Pod template
         template:
           spec:
+            resourceClaims:
+            - name: rtcpu
+              source:
+                resourceClaimTemplateName: rt.example.com
             containers:
               - name: ray-worker
                 image: nasimm/mobilenet-serve:latest
                 resources:
+                  claims:
+                    - name: rtcpu
                   limits:
-                    cpu: "500m"
                     memory: "2Gi"
                   requests:
-                    cpu: "500m"
                     memory: "2Gi"
+
+---
+apiVersion: resource.k8s.io/v1alpha2
+kind: ResourceClaimTemplate
+metadata:
+  name: rt.example.com
+spec:
+  spec:
+    resourceClassName: rt.example.com
+    parametersRef:
+      apiGroup: rt.resource.example.com
+      kind: RtClaimParameters
+      name: rtclaims
+
+---
+
+apiVersion: rt.resource.example.com/v1alpha1
+kind: RtClaimParameters
+metadata:
+  name: rtclaims
+spec:
+  count: 1
+  runtime: 200
+  period: 1000
