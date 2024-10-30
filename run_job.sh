@@ -47,7 +47,6 @@ for JOB_FILE in "$JOB_FOLDER"/*.yaml; do
     echo "Stopping stress-ng process with PID $STRESS_PID..."
     kill $STRESS_PID
 
-    
     # Clean up the job
     echo "Cleaning up Ray job $JOB_NAME..."
     kubectl delete -f "$JOB_FILE"
