@@ -42,7 +42,29 @@ for JOB_FILE in "$JOB_FOLDER"/*.yaml; do
     
     # Wait for the Ray job to complete
     echo "Waiting for Ray job $JOB_NAME to complete..."
-    kubectl wait --for=condition=complete rayjob/"$JOB_NAME" --timeout=1h
+    MAX_ATTEMPTS=1000  # Adjust based on expected job duration
+    DELAY=60  # Check every 60 seconds
+
+    # Poll the RayJob status until it is 'SUCCEEDED' or 'FAILED'
+    for ((i=1; i<=MAX_ATTEMPTS; i++)); do
+        JOB_STATUS=$(kubectl get rayjob "$JOB_NAME" -o jsonpath='{.status.jobStatus}')
+        echo "Attempt $i: RayJob status is $JOB_STATUS"
+        
+        if [[ "$JOB_STATUS" == "SUCCEEDED" ]]; then
+            echo "RayJob $JOB_NAME completed successfully."
+            break
+        elif [[ "$JOB_STATUS" == "FAILED" ]]; then
+            echo "RayJob $JOB_NAME failed."
+            break
+        fi
+
+        if [[ $i -eq $MAX_ATTEMPTS ]]; then
+            echo "Reached maximum attempts without detecting job completion. Exiting with status $JOB_STATUS."
+            exit 1
+        fi
+
+        sleep $DELAY
+    done
 
     echo "Stopping stress-ng process with PID $STRESS_PID..."
     kill $STRESS_PID
