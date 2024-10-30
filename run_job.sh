@@ -74,5 +74,6 @@ for JOB_FILE in "$JOB_FOLDER"/*.yaml; do
     kubectl delete -f "$JOB_FILE"
     
     echo "Completed job $JOB_FILE."
+    sleep 10  # Add a delay between jobs
 done
 
