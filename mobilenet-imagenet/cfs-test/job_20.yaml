@@ -36,21 +36,21 @@ spec:
                   name: client
               resources:
                 limits:
-                  cpu: "1"
-                  memory: "2Gi"
+                  cpu: "500m"
+                  memory: "3Gi"
                 requests:
-                  cpu: "1"
-                  memory: "2Gi"
+                  cpu: "500m"
+                  memory: "3Gi"
               env:
                 - name: RESPONSE_TIME_PATH
-                  value: "/tmp/response_times_20_cfs.csv"
+                  value: "/ray-out/response_times_20_cfs.csv"
               volumeMounts:
                 - name: response-time-volume
-                  mountPath: /tmp  # Mount hostPath volume to /tmp in the container
+                  mountPath: /ray-out  # Mount hostPath volume to /tmp in the container
           volumes:
             - name: response-time-volume
               hostPath:
-                path: /tmp/ray  # Path on the host node
+                path: /home/nasim/kuberay-test/results/cfs-test/  # Path on the host node
                 type: DirectoryOrCreate
     workerGroupSpecs:
       - replicas: 4
@@ -67,7 +67,7 @@ spec:
                 resources:
                   limits:
                     cpu: "200m"
-                    memory: "3Gi"
+                    memory: "4Gi"
                   requests:
                     cpu: "200m"
-                    memory: "3Gi"
+                    memory: "4Gi"
