@@ -43,10 +43,10 @@ spec:
                   memory: "2Gi"
               env:
                 - name: RESPONSE_TIME_PATH
-                  value: "/tmp/response_times_70_cfs.csv"
+                  value: "/tmp/ray/response_times_70_cfs.csv"
               volumeMounts:
                 - name: response-time-volume
-                  mountPath: /tmp  # Mount hostPath volume to /tmp in the container
+                  mountPath: /tmp/ray  # Mount hostPath volume to /tmp in the container
           volumes:
             - name: response-time-volume
               hostPath:

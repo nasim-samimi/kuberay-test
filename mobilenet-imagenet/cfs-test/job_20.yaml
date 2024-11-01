@@ -43,14 +43,14 @@ spec:
                   memory: "3Gi"
               env:
                 - name: RESPONSE_TIME_PATH
-                  value: "/ray-out/response_times_20_cfs.csv"
+                  value: "/tmp/ray/response_times_20_cfs.csv"
               volumeMounts:
                 - name: response-time-volume
-                  mountPath: /ray-out  # Mount hostPath volume to /tmp in the container
+                  mountPath: /tmp/ray  # Mount hostPath volume to /tmp in the container
           volumes:
             - name: response-time-volume
               hostPath:
-                path: /home/nasim/kuberay-test/results/cfs-test/  # Path on the host node
+                path: /tmp/ray  # Path on the host node
                 type: DirectoryOrCreate
     workerGroupSpecs:
       - replicas: 4
