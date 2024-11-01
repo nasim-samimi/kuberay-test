@@ -1,0 +1,86 @@
+apiVersion: ray.io/v1
+kind: RayJob
+metadata:
+  name: rayjob-mobilenet
+spec:
+  entrypoint: python mobilenet-imagenet/job.py
+  rayClusterSpec:
+    headGroupSpec:
+      rayStartParams: {}
+      template:
+        spec:
+          containers:
+          - env:
+            - name: RESPONSE_TIME_PATH
+              value: /tmp/response_times.csv
+            image: nasimm/mobilenet-serve:latest
+            name: ray-head
+            ports:
+            - containerPort: 6379
+              name: gcs-server
+            - containerPort: 8265
+              name: dashboard
+            - containerPort: 10001
+              name: client
+            resources:
+              limits:
+                cpu: '2'
+                memory: 2000Mi
+              requests:
+                cpu: '2'
+                memory: 2000Mi
+            volumeMounts:
+            - mountPath: /tmp
+              name: response-time-volume
+          volumes:
+          - hostPath:
+              path: /home/master/ray
+              type: DirectoryOrCreate
+            name: response-time-volume
+    rayVersion: 2.9.0
+    workerGroupSpecs:
+    - groupName: small-group
+      maxReplicas: 10
+      minReplicas: 1
+      rayStartParams: {}
+      replicas: 2
+      template:
+        spec:
+          containers:
+          - image: nasimm/mobilenet-serve:latest
+            name: ray-worker
+            resources:
+              limits:
+                cpu: '1'
+                memory: 3Gi
+              requests:
+                cpu: '1'
+                memory: 3Gi
+          resourceClaims:
+          - name: rtcpu
+            source:
+              resourceClaimTemplateName: rt.example.com
+  runtimeEnvYAML: "pip:\n  - pandas\nworking_dir: \"https://github.com/nasim-samimi/kuberay-test/archive/refs/heads/main.zip\"\
+    \n"
+  shutdownAfterJobFinishes: false
+---
+apiVersion: resource.k8s.io/v1alpha2
+kind: ResourceClaimTemplate
+metadata:
+  name: rt.example.com
+spec:
+  spec:
+    parametersRef:
+      apiGroup: rt.resource.example.com
+      kind: RtClaimParameters
+      name: rtclaims
+    resourceClassName: rt.example.com
+---
+apiVersion: rt.resource.example.com/v1alpha1
+kind: RtClaimParameters
+metadata:
+  name: rtclaims
+spec:
+  count: 1
+  period: 1000
+  runtime: 900

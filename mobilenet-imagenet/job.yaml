@@ -9,13 +9,7 @@ spec:
   runtimeEnvYAML: |
     pip:
       - pandas
-    #  - torch
-    #  - torchvision
-    #  - numpy
     working_dir: "https://github.com/nasim-samimi/kuberay-test/archive/refs/heads/main.zip"
-    # env_vars:
-    #   NUM_WORKERS: "2"
-    #   CPUS_PER_WORKER: "2"
 
   # rayClusterSpec specifies the RayCluster instance to be created by the RayJob controller.
   rayClusterSpec:

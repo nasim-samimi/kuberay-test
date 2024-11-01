@@ -1,20 +1,29 @@
 import yaml
 import os
+import copy
+
+# Custom presenter to handle multiline strings in block format
+def str_presenter(dumper, data):
+    if '\n' in data:
+        return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
+    return dumper.represent_scalar('tag:yaml.org,2002:str', data)
+
+yaml.add_representer(str, str_presenter)  # Register the custom presenter for strings
 
 def modify_resources_and_generate_files(input_yaml_path, output_dir, head_resources, worker_resources, claim_parameters):
-    # Load the YAML file
+    # Load the YAML file as a list of documents
     with open(input_yaml_path, 'r') as f:
-        data = list(yaml.safe_load_all(f))  # Load all documents in the YAML file
+        data = list(yaml.safe_load_all(f))  # Convert generator to a list to prevent file closure issues
 
-    # Iterate through resource and claim parameter options to create multiple files
+    # Iterate through resource configurations
     for head_cpu, head_memory in head_resources:
         for worker_cpu, worker_memory in worker_resources:
             for runtime, period in claim_parameters:
                 
-                # Create a deep copy of the original data to modify for each combination
-                modified_data = [doc.copy() for doc in data]
+                # Create a copy for modification
+                modified_data = [copy.deepcopy(doc) for doc in data]
                 
-                # Update RayJob resources
+                # Apply resource configurations
                 for doc in modified_data:
                     if doc.get('kind') == 'RayJob':
                         ray_cluster_spec = doc['spec'].get('rayClusterSpec', {})
@@ -39,7 +48,15 @@ def modify_resources_and_generate_files(input_yaml_path, output_dir, head_resour
                                     container['resources']['limits']['memory'] = worker_memory
                                     container['resources']['requests']['cpu'] = worker_cpu
                                     container['resources']['requests']['memory'] = worker_memory
-                
+
+                        # Explicitly format the `runtimeEnvYAML` and `entrypoint` fields with block notation
+                        doc['spec']['runtimeEnvYAML'] = """\
+pip:
+  - pandas
+working_dir: "https://github.com/nasim-samimi/kuberay-test/archive/refs/heads/main.zip"
+"""
+                        doc['spec']['entrypoint'] = "python mobilenet-imagenet/job.py"
+
                 # Update ResourceClaimTemplate parameters
                 for doc in modified_data:
                     if doc.get('kind') == 'RtClaimParameters':
@@ -50,9 +67,9 @@ def modify_resources_and_generate_files(input_yaml_path, output_dir, head_resour
                 output_filename = f"rayjob_head_{head_cpu}_{head_memory}_worker_{worker_cpu}_{worker_memory}_claim_{runtime}_{period}.yaml"
                 output_path = os.path.join(output_dir, output_filename)
 
-                # Write the modified data to a new YAML file
+                # Write the modified data to a new YAML file with all documents
                 with open(output_path, 'w') as f:
-                    yaml.dump_all(modified_data, f, default_flow_style=False)
+                    yaml.safe_dump_all(modified_data, f, default_flow_style=False)
 
 # Example usage
 input_yaml_path = 'mobilenet-imagenet/job.yaml'
