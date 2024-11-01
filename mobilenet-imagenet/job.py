@@ -45,6 +45,8 @@ def preprocess_image(image_path): ## this is for tensorflow
 # Image inference function
 def infer_image(image_path,model):
     img = Image.open(image_path)
+    if img.mode != "RGB":
+        img = img.convert("RGB")
     img = preprocess(img)  # Apply preprocessing
     img = img.unsqueeze(0)  # Add batch dimension
     start_time = time.time()
