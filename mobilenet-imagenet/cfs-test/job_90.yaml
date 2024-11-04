@@ -24,6 +24,7 @@ spec:
       # Pod template
       template:
         spec:
+          nodeName: ray1
           containers:
             - name: ray-head
               image: nasimm/mobilenet-serve:latest
@@ -61,6 +62,7 @@ spec:
         # Pod template
         template:
           spec:
+            nodeName: ray2
             containers:
               - name: ray-worker
                 image: nasimm/mobilenet-serve:latest
