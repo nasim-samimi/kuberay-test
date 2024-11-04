@@ -34,12 +34,13 @@ for JOB_FILE in "$JOB_FOLDER"/*.yaml; do
     kubectl create -f "$JOB_FILE"
     
     # Start stress-ng in the background with CPU load, capture its PID
-    nice -n 10 stress-ng --cpu 9 --cpu-load 95 &
-    STRESS_PID=$!
-    echo "Started stress-ng process with PID $STRESS_PID."
+    # nice -n 10 stress-ng --cpu 9 --cpu-load 95 &
+    # STRESS_PID=$!
+    # echo "Started stress-ng process with PID $STRESS_PID."
     
     # Extract job name to monitor its completion
-    JOB_NAME=$(kubectl get -f "$JOB_FILE" -o jsonpath='{.metadata.name}')
+    # JOB_NAME=$(kubectl get -f "$JOB_FILE" -o jsonpath='{.metadata.name}')
+    JOB_NAME="rayjob-mobilenet"
     
     # Wait for the Ray job to complete
     echo "Waiting for Ray job $JOB_NAME to complete..."
@@ -67,14 +68,14 @@ for JOB_FILE in "$JOB_FOLDER"/*.yaml; do
         sleep $DELAY
     done
 
-    echo "Stopping stress-ng process with PID $STRESS_PID..."
-    kill $STRESS_PID
+    # echo "Stopping stress-ng process with PID $STRESS_PID..."
+    # kill $STRESS_PID
 
     # Clean up the job
     echo "Cleaning up Ray job $JOB_NAME..."
     kubectl delete -f "$JOB_FILE"
     
     echo "Completed job $JOB_FILE."
-    sleep 10  # Add a delay between jobs
+    sleep 60  # Add a delay between jobs
 done
 
