@@ -60,7 +60,7 @@ spec:
         # Pod template
         template:
           spec:
-            nodeName: ray2
+            # nodeName: ray2
             resourceClaims:
             - name: rtcpu
               source:

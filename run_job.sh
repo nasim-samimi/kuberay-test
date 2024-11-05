@@ -34,7 +34,7 @@ for JOB_FILE in "$JOB_FOLDER"/*.yaml; do
     kubectl create -f "$JOB_FILE"
     
     # Start stress-ng in the background with CPU load, capture its PID
-    # nice -n 10 stress-ng --cpu 9 --cpu-load 95 &
+    # nice -n 10 stress-ng --cpu 4 --cpu-load 95 &
     # STRESS_PID=$!
     # echo "Started stress-ng process with PID $STRESS_PID."
     
