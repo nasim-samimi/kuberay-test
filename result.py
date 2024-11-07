@@ -21,7 +21,7 @@ def get_results(results_dir):  # Read from response_times.csv
             name = file.split(".")[0]
             cpu_time = int(''.join(filter(str.isdigit, name)))  # Extract integer value from filename
             df = pd.read_csv(os.path.join(results_dir, file))
-            data[f"cpu_time={cpu_time}"] = df["response_time"]
+            data[f"cpu_utilisation={cpu_time}"] = df["response_time"]
     return data
 
 # Load data for both tests
