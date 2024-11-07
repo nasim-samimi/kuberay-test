@@ -99,5 +99,5 @@ metadata:
   name: rtclaims
 spec:
   count: 1
-  runtime: 300
-  period: 1000
+  runtime: 30000
+  period: 100000
