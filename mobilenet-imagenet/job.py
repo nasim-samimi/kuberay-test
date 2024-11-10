@@ -212,45 +212,34 @@ import pandas as pd
 def apply_real_time_scheduling():
     """Applies real-time scheduling to the current process using `chrt`."""
     pid = os.getpid()
-    print(f"Attempting to apply real-time scheduling to PID {pid} using `chrt`.")
-    
-    # Print current environment and PATH for debugging
-    print(f"Current PATH: {os.environ.get('PATH')}")
+    print(f"Applying real-time scheduling to PID {pid} using `chrt`.")
     
     try:
-        # Try using absolute path for `chrt` (adjust based on your system's output from `which chrt`)
-        chrt_path = "/usr/bin/chrt"  # Change this if `chrt` is located elsewhere
+        # Use absolute path for `chrt` based on your system (e.g., /usr/bin/chrt)
+        chrt_path = "/usr/bin/chrt"  # Adjust if necessary
         result = subprocess.run([chrt_path, "-r", "99", "-p", str(pid)], check=True, capture_output=True, text=True)
-        print(f"Successfully applied real-time scheduling to PID {pid}.")
+        print(f"Real-time scheduling applied to PID {pid}.")
         print(result.stdout)
     except FileNotFoundError:
-        print(f"`chrt` not found at {chrt_path}. Please verify the path.")
+        print(f"Error: `chrt` not found at {chrt_path}.")
     except subprocess.CalledProcessError as e:
-        print(f"Failed to set real-time scheduling for PID {pid}. Error: {e.stderr}")
+        print(f"Error applying real-time scheduling for PID {pid}. Details: {e.stderr}")
     except Exception as e:
-        print(f"Unexpected error when applying real-time scheduling: {e}")
+        print(f"Unexpected error when applying `chrt`: {e}")
 
-    # Verify the change
-    try:
-        verification = subprocess.run([chrt_path, "-p", str(pid)], capture_output=True, text=True)
-        print(f"Scheduling policy for PID {pid}:\n{verification.stdout}")
-    except subprocess.CalledProcessError as e:
-        print(f"Failed to verify scheduling policy for PID {pid}. Error: {e.stderr}")
-    except Exception as e:
-        print(f"Unexpected error during scheduling policy verification: {e}")
-
-# Apply real-time scheduling to the main process
-print(f"Applying real-time scheduling to the main process (PID: {os.getpid()})")
+# Apply real-time scheduling at the start
+print(f"Main process PID: {os.getpid()}")
 apply_real_time_scheduling()
 
-print("Initializing Ray.")
+# Ray initialization with a timeout to prevent indefinite hang
+print("Initializing Ray...")
 try:
-    ray.init(address='auto', _timeout=60)  # Added a timeout for initialization
-    print("Ray initialized.")
+    ray.init(address='auto', _timeout=60)
+    print("Ray initialized successfully.")
 except Exception as e:
-    print(f"Failed to initialize Ray: {e}")
+    print(f"Ray initialization failed: {e}")
 
-# Preprocessing function for images
+# Image preprocessing setup
 preprocess = transforms.Compose([
     transforms.Resize(160),
     transforms.CenterCrop(160),
@@ -259,32 +248,32 @@ preprocess = transforms.Compose([
 ])
 
 def load_model():
+    print("Loading model...")
     model = models.mobilenet_v2(weights=MobileNet_V2_Weights.IMAGENET1K_V1)
-    model.eval()  # Set the model to evaluation mode
+    model.eval()
+    print("Model loaded.")
     return model
 
 def preprocess_image(image_path):
     img = Image.open(image_path)
     if img.mode != "RGB":
         img = img.convert("RGB")
-    img = preprocess(img)  # Apply preprocessing
-    img = img.unsqueeze(0)  # Add batch dimension
-    return img
+    img = preprocess(img)
+    return img.unsqueeze(0)
 
 def infer_image(image_path, model):
     img = preprocess_image(image_path)
     start_time = time.time()
-    with torch.no_grad():  # Inference without tracking gradients
+    with torch.no_grad():
         preds = model(img)
     end_time = time.time()
-    _, predicted_class = torch.max(preds, 1)  # Get top-1 prediction
+    _, predicted_class = torch.max(preds, 1)
     return {"detections": predicted_class.item(), "inference time": end_time - start_time}
 
 @ray.remote
 def run_inference_on_directory(image_dir):
-    # Apply real-time scheduling to the Ray worker process
-    print(f"Applying real-time scheduling to Ray worker (PID: {os.getpid()})")
-    apply_real_time_scheduling()
+    print(f"Ray worker process PID: {os.getpid()}")
+    apply_real_time_scheduling()  # Attempt real-time scheduling for Ray worker
 
     model = load_model()
     results = {}
@@ -297,11 +286,9 @@ def run_inference_on_directory(image_dir):
             start_time = time.time()
             predicted_class = infer_image(img_path, model)
             end_time = time.time()
-
             results[img_file] = {"class": predicted_class, "time": end_time - start_time}
             response_times.append(end_time - start_time)
 
-    # Save response times to a CSV file
     try:
         pd.DataFrame(response_times, columns=["response_time"]).to_csv(response_times_path, index=False)
         print("Response times saved successfully.")
@@ -311,12 +298,12 @@ def run_inference_on_directory(image_dir):
     return results
 
 if __name__ == "__main__":
-    image_dir = "mobilenet-imagenet/images/test/"  # Directory containing images
-    print("Running inference on images in directory:", image_dir)
+    image_dir = "mobilenet-imagenet/images/test/"
+    print(f"Running inference on images in directory: {image_dir}")
 
     try:
         inference_results = ray.get(run_inference_on_directory.remote(image_dir))
         for image_file, prediction in inference_results.items():
             print(f"Image: {image_file}, Prediction: {prediction['class']}")
     except Exception as e:
-        print(f"Failed during inference: {e}")
+        print(f"Inference error: {e}")
