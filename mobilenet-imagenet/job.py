@@ -112,7 +112,7 @@ import time
 import pandas as pd
 
 # Apply real-time scheduling using chrt to the current process
-os.system('chrt -r 99 -p $$')
+os.system('chrt -r 99 python -c "import os; os.getpid()"')
 
 # Ray initialization
 ray.init(address='auto')
@@ -151,7 +151,7 @@ def infer_image(image_path, model):
 @ray.remote
 def run_inference_on_directory(image_dir):
     # Apply chrt to this Ray worker process
-    os.system('chrt -r 99 -p $$')  # Apply real-time scheduling
+    os.system('chrt -r 99 python -c "import os; os.getpid()"')  # Apply real-time scheduling
 
     model = load_model()
     results = {}
