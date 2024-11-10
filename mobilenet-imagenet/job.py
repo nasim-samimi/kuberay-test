@@ -212,17 +212,24 @@ import pandas as pd
 def apply_real_time_scheduling():
     """Applies real-time scheduling to the current process using `chrt`."""
     pid = os.getpid()
+    print(f"Attempting to apply real-time scheduling to PID {pid} using `chrt`.")
+    
+    # Print current environment and PATH for debugging
+    print(f"Current PATH: {os.environ.get('PATH')}")
     try:
-        # Attempt to apply real-time scheduling
-        result = subprocess.run(["chrt", "-r", "99", "-p", str(pid)], check=True, capture_output=True, text=True)
+        # Try using absolute path for `chrt` (adjust based on your system's output from `which chrt`)
+        chrt_path = "/usr/bin/chrt"
+        result = subprocess.run([chrt_path, "-r", "99", "-p", str(pid)], check=True, capture_output=True, text=True)
         print(f"Successfully applied real-time scheduling to PID {pid}.")
         print(result.stdout)
+    except FileNotFoundError:
+        print(f"`chrt` not found at {chrt_path}. Please verify the path.")
     except subprocess.CalledProcessError as e:
         print(f"Failed to set real-time scheduling for PID {pid}. Error: {e.stderr}")
 
     # Verify the change
     try:
-        verification = subprocess.run(["chrt", "-p", str(pid)], capture_output=True, text=True)
+        verification = subprocess.run([chrt_path, "-p", str(pid)], capture_output=True, text=True)
         print(f"Scheduling policy for PID {pid}:\n{verification.stdout}")
     except subprocess.CalledProcessError as e:
         print(f"Failed to verify scheduling policy for PID {pid}. Error: {e.stderr}")
