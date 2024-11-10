@@ -111,8 +111,13 @@ import ray
 import time
 import pandas as pd
 
-# Apply real-time scheduling using chrt to the current process
-os.system(f'chrt -r 99 -p {os.getpid()}')
+# Apply real-time scheduling to the current main process
+print(f"Applying real-time scheduling to the main process (PID: {os.getpid()})")
+result = os.system(f'chrt -r 99 -p {os.getpid()}')
+if result != 0:
+    print("Failed to set real-time scheduling policy for the main process. Check if `chrt` is available and permissions are sufficient.")
+else:
+    print("Successfully applied real-time scheduling to the main process.")
 os.system(f'chrt -p {os.getpid()}')  # Verify the change
 
 # Ray initialization
@@ -151,9 +156,14 @@ def infer_image(image_path, model):
 
 @ray.remote
 def run_inference_on_directory(image_dir):
-    # Apply chrt to this Ray worker process
-    os.system(f'chrt -r 99 -p {os.getpid()}')
-    os.system(f'chrt -p {os.getpid()}')  # Verify the change 
+    # Apply real-time scheduling to the Ray worker process
+    print(f"Applying real-time scheduling to Ray worker (PID: {os.getpid()})")
+    result = os.system(f'chrt -r 99 -p {os.getpid()}')
+    if result != 0:
+        print("Failed to set real-time scheduling policy for Ray worker. Check if `chrt` is available and permissions are sufficient.")
+    else:
+        print("Successfully applied real-time scheduling to Ray worker.")
+    os.system(f'chrt -p {os.getpid()}')  # Verify the change
 
     model = load_model()
     results = {}
