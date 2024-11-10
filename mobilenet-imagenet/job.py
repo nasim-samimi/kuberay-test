@@ -200,12 +200,12 @@
 
 import os
 import subprocess
+import ray
 import torch
 import numpy as np
 from torchvision import models, transforms
 from torchvision.models import MobileNet_V2_Weights
 from PIL import Image
-import ray
 import time
 import pandas as pd
 
@@ -216,9 +216,10 @@ def apply_real_time_scheduling():
     
     # Print current environment and PATH for debugging
     print(f"Current PATH: {os.environ.get('PATH')}")
+    
     try:
         # Try using absolute path for `chrt` (adjust based on your system's output from `which chrt`)
-        chrt_path = "/usr/bin/chrt"
+        chrt_path = "/usr/bin/chrt"  # Change this if `chrt` is located elsewhere
         result = subprocess.run([chrt_path, "-r", "99", "-p", str(pid)], check=True, capture_output=True, text=True)
         print(f"Successfully applied real-time scheduling to PID {pid}.")
         print(result.stdout)
@@ -226,6 +227,8 @@ def apply_real_time_scheduling():
         print(f"`chrt` not found at {chrt_path}. Please verify the path.")
     except subprocess.CalledProcessError as e:
         print(f"Failed to set real-time scheduling for PID {pid}. Error: {e.stderr}")
+    except Exception as e:
+        print(f"Unexpected error when applying real-time scheduling: {e}")
 
     # Verify the change
     try:
@@ -233,14 +236,19 @@ def apply_real_time_scheduling():
         print(f"Scheduling policy for PID {pid}:\n{verification.stdout}")
     except subprocess.CalledProcessError as e:
         print(f"Failed to verify scheduling policy for PID {pid}. Error: {e.stderr}")
+    except Exception as e:
+        print(f"Unexpected error during scheduling policy verification: {e}")
 
 # Apply real-time scheduling to the main process
 print(f"Applying real-time scheduling to the main process (PID: {os.getpid()})")
 apply_real_time_scheduling()
 
-# Ray initialization
-ray.init(address='auto')
-print("Ray initialized")
+print("Initializing Ray.")
+try:
+    ray.init(address='auto', _timeout=60)  # Added a timeout for initialization
+    print("Ray initialized.")
+except Exception as e:
+    print(f"Failed to initialize Ray: {e}")
 
 # Preprocessing function for images
 preprocess = transforms.Compose([
@@ -306,7 +314,9 @@ if __name__ == "__main__":
     image_dir = "mobilenet-imagenet/images/test/"  # Directory containing images
     print("Running inference on images in directory:", image_dir)
 
-    inference_results = ray.get(run_inference_on_directory.remote(image_dir))
-
-    for image_file, prediction in inference_results.items():
-        print(f"Image: {image_file}, Prediction: {prediction['class']}")
+    try:
+        inference_results = ray.get(run_inference_on_directory.remote(image_dir))
+        for image_file, prediction in inference_results.items():
+            print(f"Image: {image_file}, Prediction: {prediction['class']}")
+    except Exception as e:
+        print(f"Failed during inference: {e}")
