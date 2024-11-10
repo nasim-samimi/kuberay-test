@@ -224,12 +224,6 @@ def apply_and_check_scheduling():
         chrt_path = "/usr/bin/chrt"  # Ensure this path is correct
         # Apply real-time scheduling
         os.system(f"chrt -r 99 -p {pid}")
-        # result = subprocess.run(f"chrt -r 99 -p {pid}", shell=True, capture_output=True, text=True)
-
-        # if result.returncode == 0:
-        #     print(f"Successfully applied real-time scheduling to PID {pid}.")
-        # else:
-        #     print(f"`chrt` application failed. Return code: {result.returncode}. Output: {result.stdout}, Error: {result.stderr}")
 
         # Check scheduling policy
         check_result = subprocess.run([chrt_path, "-p", str(pid)], capture_output=True, text=True)
@@ -242,6 +236,8 @@ def apply_and_check_scheduling():
 
 # Initial log
 print("Starting the Python script.")
+os.system("id")
+os.system("cat /proc/self/status | grep CapEff")
 
 
 # Uncomment if `chrt` application is required and does not cause issues
@@ -261,6 +257,7 @@ preprocess = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
+apply_and_check_scheduling()
 
 def load_model():
     print("Loading model...")
@@ -315,6 +312,8 @@ def run_inference_on_directory(image_dir):
     return results
 
 if __name__ == "__main__":
+    
+    apply_and_check_scheduling()
     image_dir = "mobilenet-imagenet/images/test/"
     print(f"Running inference on images in directory: {image_dir}")
 
