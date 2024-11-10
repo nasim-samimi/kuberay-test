@@ -218,30 +218,14 @@ def apply_and_check_scheduling():
         pid = os.getpid()
         print(f"Applying `chrt` real-time scheduling to PID {pid}...")
 
-        # Check if PID is valid and accessible
         os.system(f"ps -p {pid}")
-
-        chrt_path = "/usr/bin/chrt"  # Ensure this path is correct
-        # Apply real-time scheduling
         os.system(f"chrt -r 99 -p {pid}")
 
-        # Check scheduling policy
         check_result = subprocess.run([chrt_path, "-p", str(pid)], capture_output=True, text=True)
         print(f"Scheduling policy verification for PID {pid}:")
         print(check_result.stdout)
     except Exception as e:
         print(f"Error applying `chrt`: {e}")
-
-
-
-# Initial log
-print("Starting the Python script.")
-os.system("id")
-os.system("cat /proc/self/status | grep CapEff")
-
-
-# Uncomment if `chrt` application is required and does not cause issues
-apply_and_check_scheduling()
 
 print("Initializing Ray...")
 try:
@@ -257,7 +241,6 @@ preprocess = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
-apply_and_check_scheduling()
 
 def load_model():
     print("Loading model...")
@@ -313,7 +296,6 @@ def run_inference_on_directory(image_dir):
 
 if __name__ == "__main__":
     
-    apply_and_check_scheduling()
     image_dir = "mobilenet-imagenet/images/test/"
     print(f"Running inference on images in directory: {image_dir}")
 
