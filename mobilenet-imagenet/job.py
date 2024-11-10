@@ -111,8 +111,8 @@ import ray
 import time
 import pandas as pd
 
-# Apply real-time scheduling using chrt
-os.system('sudo chrt -f 99 -p $$')  # Adjust sudo and permissions as needed
+# Apply real-time scheduling using chrt to the current process
+os.system('sudo chrt -r 99 -p $$')  # Use 'sudo' if needed, adjust for permissions
 
 # Ray initialization
 ray.init(address='auto')
@@ -131,19 +131,16 @@ def load_model():
     model.eval()  # Set the model to evaluation mode
     return model
 
-def preprocess_image(image_path):  # This is for TensorFlow (currently not used)
-    img = image.load_img(image_path, target_size=(224, 224))  # Load and resize image
-    img_array = image.img_to_array(img)  # Convert to numpy array
-    img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
-    return preprocess_input(img_array)  # Preprocess input for MobileNetV2
-
-# Image inference function
-def infer_image(image_path, model):
+def preprocess_image(image_path):
     img = Image.open(image_path)
     if img.mode != "RGB":
         img = img.convert("RGB")
     img = preprocess(img)  # Apply preprocessing
     img = img.unsqueeze(0)  # Add batch dimension
+    return img
+
+def infer_image(image_path, model):
+    img = preprocess_image(image_path)
     start_time = time.time()
     with torch.no_grad():  # Inference without tracking gradients
         preds = model(img)
@@ -153,26 +150,23 @@ def infer_image(image_path, model):
 
 @ray.remote
 def run_inference_on_directory(image_dir):
-    # Apply chrt in the Ray worker process (if needed)
-    os.system('sudo chrt -f 99 -p $$')  # Apply real-time scheduling
+    # Apply chrt to this Ray worker process
+    os.system('sudo chrt -r 99 -p $$')  # Apply real-time scheduling
 
     model = load_model()
     results = {}
     response_times = []
     response_times_path = os.getenv("RESPONSE_TIME_PATH", "response_times.csv")
 
-    # Check if the directory exists, and process images
-    i = 0
     for img_file in os.listdir(image_dir):
         img_path = os.path.join(image_dir, img_file)
         if os.path.isfile(img_path):
             start_time = time.time()
-            predicted_class = infer_image(img_path, model)  # Inference using PyTorch
+            predicted_class = infer_image(img_path, model)
             end_time = time.time()
 
             results[img_file] = {"class": predicted_class, "time": end_time - start_time}
             response_times.append(end_time - start_time)
-        i += 1
 
     # Save response times to a CSV file
     try:
