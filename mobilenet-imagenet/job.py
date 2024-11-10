@@ -228,7 +228,7 @@ print("Starting the Python script.")
 
 print("Initializing Ray...")
 try:
-    ray.init(address='auto', _timeout=60)
+    ray.init(address='auto')
     print("Ray initialized successfully.")
 except Exception as e:
     print(f"Ray initialization failed: {e}")
