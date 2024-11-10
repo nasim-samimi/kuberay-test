@@ -221,11 +221,13 @@ def apply_and_check_scheduling():
         os.system(f"ps -p {pid}")
         os.system(f"chrt -r 99 -p {pid}")
 
-        check_result = subprocess.run([chrt_path, "-p", str(pid)], capture_output=True, text=True)
+        check_result = subprocess.run(["chrt", "-p", str(pid)], capture_output=True, text=True)
         print(f"Scheduling policy verification for PID {pid}:")
         print(check_result.stdout)
     except Exception as e:
         print(f"Error applying `chrt`: {e}")
+
+apply_and_check_scheduling()
 
 print("Initializing Ray...")
 try:
