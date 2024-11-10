@@ -227,7 +227,7 @@ def apply_and_check_scheduling():
     except Exception as e:
         print(f"Error applying `chrt`: {e}")
 
-apply_and_check_scheduling()
+# apply_and_check_scheduling()
 
 print("Initializing Ray...")
 try:
