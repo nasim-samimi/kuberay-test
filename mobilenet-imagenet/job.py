@@ -207,16 +207,24 @@ from torchvision.models import MobileNet_V2_Weights
 from PIL import Image
 import time
 import pandas as pd
+import subprocess
 
-def apply_real_time_scheduling():
-    """Applies real-time scheduling using `chrt`."""
+def apply_and_check_scheduling():
+    """Applies and verifies real-time scheduling using `chrt`."""
     try:
         pid = os.getpid()
         print(f"Applying `chrt` real-time scheduling to PID {pid}...")
-        # Use absolute path for `chrt` (adjust this if necessary)
-        chrt_path = "/usr/bin/chrt"
+        chrt_path = "/usr/bin/chrt"  # Adjust path if necessary
+        # Apply real-time scheduling
         result = subprocess.run([chrt_path, "-r", "99", "-p", str(pid)], capture_output=True, text=True)
-        print("chrt command executed. Output:", result.stdout)
+        if result.returncode == 0:
+            print(f"Successfully applied real-time scheduling to PID {pid}.")
+        else:
+            print(f"`chrt` application failed. Return code: {result.returncode}. Output: {result.stdout}, Error: {result.stderr}")
+        # Check scheduling policy
+        check_result = subprocess.run([chrt_path, "-p", str(pid)], capture_output=True, text=True)
+        print(f"Scheduling policy verification for PID {pid}:")
+        print(check_result.stdout)
     except Exception as e:
         print(f"Error applying `chrt`: {e}")
 
@@ -224,7 +232,7 @@ def apply_real_time_scheduling():
 print("Starting the Python script.")
 
 # Uncomment if `chrt` application is required and does not cause issues
-# apply_real_time_scheduling()
+apply_and_check_scheduling()
 
 print("Initializing Ray...")
 try:
@@ -267,6 +275,10 @@ def infer_image(image_path, model):
 @ray.remote
 def run_inference_on_directory(image_dir):
     print(f"Ray worker process started with PID: {os.getpid()}")
+    
+    # Apply and check scheduling for the Ray worker process
+    apply_and_check_scheduling()
+
     model = load_model()
     results = {}
     response_times = []
