@@ -223,7 +223,8 @@ def apply_and_check_scheduling():
 
         chrt_path = "/usr/bin/chrt"  # Ensure this path is correct
         # Apply real-time scheduling
-        result = subprocess.run([chrt_path, "-r", "99", "-p", str(pid)], capture_output=True, text=True)
+        result = subprocess.run(f"chrt -r 99 -p {pid}", shell=True, capture_output=True, text=True)
+
         if result.returncode == 0:
             print(f"Successfully applied real-time scheduling to PID {pid}.")
         else:
