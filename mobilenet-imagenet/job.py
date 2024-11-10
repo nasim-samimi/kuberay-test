@@ -209,23 +209,33 @@ import time
 import pandas as pd
 import subprocess
 
+import subprocess
+import os
+
 def apply_and_check_scheduling():
     """Applies and verifies real-time scheduling using `chrt`."""
     try:
         pid = os.getpid()
         print(f"Applying `chrt` real-time scheduling to PID {pid}...")
-        # Use `chrt` directly assuming it is in the PATH
-        result = subprocess.run(["/usr/bin/chrt", "-r", "99", "-p", str(pid)], capture_output=True, text=True)
+
+        # Check if PID is valid and accessible
+        os.system(f"ps -p {pid}")
+
+        chrt_path = "/usr/bin/chrt"  # Ensure this path is correct
+        # Apply real-time scheduling
+        result = subprocess.run([chrt_path, "-r", "99", "-p", str(pid)], capture_output=True, text=True)
         if result.returncode == 0:
             print(f"Successfully applied real-time scheduling to PID {pid}.")
         else:
             print(f"`chrt` application failed. Return code: {result.returncode}. Output: {result.stdout}, Error: {result.stderr}")
+
         # Check scheduling policy
-        check_result = subprocess.run(["/usr/bin/chrt", "-p", str(pid)], capture_output=True, text=True)
+        check_result = subprocess.run([chrt_path, "-p", str(pid)], capture_output=True, text=True)
         print(f"Scheduling policy verification for PID {pid}:")
         print(check_result.stdout)
     except Exception as e:
         print(f"Error applying `chrt`: {e}")
+
 
 
 # Initial log
