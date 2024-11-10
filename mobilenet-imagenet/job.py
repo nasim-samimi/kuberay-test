@@ -199,7 +199,6 @@
 #         print(f"Image: {image_file}, Prediction: {prediction['class']}")
 
 import os
-import subprocess
 import ray
 import torch
 import numpy as np
@@ -210,28 +209,23 @@ import time
 import pandas as pd
 
 def apply_real_time_scheduling():
-    """Applies real-time scheduling to the current process using `chrt`."""
-    pid = os.getpid()
-    print(f"Applying real-time scheduling to PID {pid} using `chrt`.")
-    
+    """Applies real-time scheduling using `chrt`."""
     try:
-        # Use absolute path for `chrt` based on your system (e.g., /usr/bin/chrt)
-        chrt_path = "/usr/bin/chrt"  # Adjust if necessary
-        result = subprocess.run([chrt_path, "-r", "99", "-p", str(pid)], check=True, capture_output=True, text=True)
-        print(f"Real-time scheduling applied to PID {pid}.")
-        print(result.stdout)
-    except FileNotFoundError:
-        print(f"Error: `chrt` not found at {chrt_path}.")
-    except subprocess.CalledProcessError as e:
-        print(f"Error applying real-time scheduling for PID {pid}. Details: {e.stderr}")
+        pid = os.getpid()
+        print(f"Applying `chrt` real-time scheduling to PID {pid}...")
+        # Use absolute path for `chrt` (adjust this if necessary)
+        chrt_path = "/usr/bin/chrt"
+        result = subprocess.run([chrt_path, "-r", "99", "-p", str(pid)], capture_output=True, text=True)
+        print("chrt command executed. Output:", result.stdout)
     except Exception as e:
-        print(f"Unexpected error when applying `chrt`: {e}")
+        print(f"Error applying `chrt`: {e}")
 
-# Apply real-time scheduling at the start
-print(f"Main process PID: {os.getpid()}")
-apply_real_time_scheduling()
+# Initial log
+print("Starting the Python script.")
 
-# Ray initialization with a timeout to prevent indefinite hang
+# Uncomment if `chrt` application is required and does not cause issues
+# apply_real_time_scheduling()
+
 print("Initializing Ray...")
 try:
     ray.init(address='auto', _timeout=60)
@@ -239,7 +233,7 @@ try:
 except Exception as e:
     print(f"Ray initialization failed: {e}")
 
-# Image preprocessing setup
+# Preprocessing function for images
 preprocess = transforms.Compose([
     transforms.Resize(160),
     transforms.CenterCrop(160),
@@ -272,9 +266,7 @@ def infer_image(image_path, model):
 
 @ray.remote
 def run_inference_on_directory(image_dir):
-    print(f"Ray worker process PID: {os.getpid()}")
-    apply_real_time_scheduling()  # Attempt real-time scheduling for Ray worker
-
+    print(f"Ray worker process started with PID: {os.getpid()}")
     model = load_model()
     results = {}
     response_times = []
