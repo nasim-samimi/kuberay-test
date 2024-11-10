@@ -223,12 +223,13 @@ def apply_and_check_scheduling():
 
         chrt_path = "/usr/bin/chrt"  # Ensure this path is correct
         # Apply real-time scheduling
-        result = subprocess.run(f"chrt -r 99 -p {pid}", shell=True, capture_output=True, text=True)
+        os.system(f"chrt -r 99 -p {pid}")
+        # result = subprocess.run(f"chrt -r 99 -p {pid}", shell=True, capture_output=True, text=True)
 
-        if result.returncode == 0:
-            print(f"Successfully applied real-time scheduling to PID {pid}.")
-        else:
-            print(f"`chrt` application failed. Return code: {result.returncode}. Output: {result.stdout}, Error: {result.stderr}")
+        # if result.returncode == 0:
+        #     print(f"Successfully applied real-time scheduling to PID {pid}.")
+        # else:
+        #     print(f"`chrt` application failed. Return code: {result.returncode}. Output: {result.stdout}, Error: {result.stderr}")
 
         # Check scheduling policy
         check_result = subprocess.run([chrt_path, "-p", str(pid)], capture_output=True, text=True)
@@ -241,8 +242,6 @@ def apply_and_check_scheduling():
 
 # Initial log
 print("Starting the Python script.")
-os.system("which chrt")
-os.system("chrt -h")
 
 
 # Uncomment if `chrt` application is required and does not cause issues
