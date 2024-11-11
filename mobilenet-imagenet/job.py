@@ -219,7 +219,7 @@ def apply_and_check_scheduling():
         print(f"Applying `chrt` real-time scheduling to PID {pid}...")
 
         os.system(f"ps -p {pid}")
-        os.system(f"chrt -r 99 -p {pid}")
+        os.system(f"chrt -r -p 99 {pid}")
 
         check_result = subprocess.run(["chrt", "-p", str(pid)], capture_output=True, text=True)
         print(f"Scheduling policy verification for PID {pid}:")
