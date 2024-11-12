@@ -212,11 +212,6 @@ import subprocess
 import ctypes
 from ctypes.util import find_library
 
-# Define constants for real-time scheduling
-SCHED_RR = 2
-libc = ctypes.CDLL(find_library('c'), use_errno=True)
-
-
 # def apply_and_check_scheduling():
 #     """Applies and verifies real-time scheduling using `chrt`."""
 #     try:
@@ -232,16 +227,19 @@ libc = ctypes.CDLL(find_library('c'), use_errno=True)
 #     except Exception as e:
 #         print(f"Error applying `chrt`: {e}")
 
+libc = ctypes.CDLL(find_library("c"), use_errno=True)
+SCHED_RR = 2  # Constant for SCHED_RR policy
+
 class SchedParam(ctypes.Structure):
     _fields_ = [("sched_priority", ctypes.c_int)]
-    
+
 def set_sched_rr():
-    pid = 0  # 0 indicates the calling thread
-    param = ctypes.c_int(99)  # Real-time priority (99 is the highest)
+    pid = 0  # 0 means the calling thread/process
+    param = SchedParam(sched_priority=99)  # Real-time priority (99 is the maximum)
     result = libc.sched_setscheduler(pid, SCHED_RR, ctypes.pointer(param))
     if result != 0:
         err = ctypes.get_errno()
-        print(f"Failed to set SCHED_RR for PID {os.getpid()}. Error code: {err}")
+        print(f"Failed to set SCHED_RR for PID {os.getpid()}. Error code: {err} - {os.strerror(err)}")
     else:
         print(f"Successfully set SCHED_RR for PID {os.getpid()}.")
 
