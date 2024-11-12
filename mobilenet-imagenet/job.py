@@ -231,6 +231,10 @@ libc = ctypes.CDLL(find_library('c'), use_errno=True)
 #         print(check_result.stdout)
 #     except Exception as e:
 #         print(f"Error applying `chrt`: {e}")
+
+class SchedParam(ctypes.Structure):
+    _fields_ = [("sched_priority", ctypes.c_int)]
+    
 def set_sched_rr():
     pid = 0  # 0 indicates the calling thread
     param = ctypes.c_int(99)  # Real-time priority (99 is the highest)
