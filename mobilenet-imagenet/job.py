@@ -301,6 +301,7 @@ def run_inference_on_directory(image_dir):
     response_times = []
     response_times_path = os.getenv("RESPONSE_TIME_PATH", "response_times.csv")
 
+    print("Running inference on images in directory")
     for img_file in os.listdir(image_dir):
         img_path = os.path.join(image_dir, img_file)
         if os.path.isfile(img_path):
@@ -309,6 +310,7 @@ def run_inference_on_directory(image_dir):
             end_time = time.time()
             results[img_file] = {"class": predicted_class, "time": end_time - start_time}
             response_times.append(end_time - start_time)
+    print("Inference completed.")
 
     try:
         pd.DataFrame(response_times, columns=["response_time"]).to_csv(response_times_path, index=False)
