@@ -229,12 +229,12 @@ from ctypes.util import find_library
 
 def set_sched_rr():
     libc = ctypes.CDLL(find_library("c"), use_errno=True)
-    SCHED_RR = 2  # Constant for SCHED_RR policy
+    SCHED_RR = 2 
 
     class SchedParam(ctypes.Structure):
         _fields_ = [("sched_priority", ctypes.c_int)]
-    pid = 0  # 0 means the calling thread/process
-    param = SchedParam(sched_priority=99)  # Real-time priority (99 is the maximum)
+    pid = 0 
+    param = SchedParam(sched_priority=90) 
     result = libc.sched_setscheduler(pid, SCHED_RR, ctypes.pointer(param))
     if result != 0:
         err = ctypes.get_errno()
