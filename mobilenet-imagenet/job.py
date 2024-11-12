@@ -209,25 +209,38 @@ import time
 import pandas as pd
 import subprocess
 
-import subprocess
-import os
+import ctypes
+from ctypes.util import find_library
 
-def apply_and_check_scheduling():
-    """Applies and verifies real-time scheduling using `chrt`."""
-    try:
-        pid = os.getpid()
-        print(f"Applying `chrt` real-time scheduling to PID {pid}...")
+# Define constants for real-time scheduling
+SCHED_RR = 2
+libc = ctypes.CDLL(find_library('c'), use_errno=True)
 
-        os.system(f"ps -p {pid}")
-        os.system(f"chrt -r -p 99 {pid}")
 
-        check_result = subprocess.run(["chrt", "-p", str(pid)], capture_output=True, text=True)
-        print(f"Scheduling policy verification for PID {pid}:")
-        print(check_result.stdout)
-    except Exception as e:
-        print(f"Error applying `chrt`: {e}")
+# def apply_and_check_scheduling():
+#     """Applies and verifies real-time scheduling using `chrt`."""
+#     try:
+#         pid = os.getpid()
+#         print(f"Applying `chrt` real-time scheduling to PID {pid}...")
 
-apply_and_check_scheduling()
+#         os.system(f"ps -p {pid}")
+#         os.system(f"chrt -r -p 99 {pid}")
+
+#         check_result = subprocess.run(["chrt", "-p", str(pid)], capture_output=True, text=True)
+#         print(f"Scheduling policy verification for PID {pid}:")
+#         print(check_result.stdout)
+#     except Exception as e:
+#         print(f"Error applying `chrt`: {e}")
+def set_sched_rr():
+    pid = 0  # 0 indicates the calling thread
+    param = ctypes.c_int(99)  # Real-time priority (99 is the highest)
+    result = libc.sched_setscheduler(pid, SCHED_RR, ctypes.pointer(param))
+    if result != 0:
+        err = ctypes.get_errno()
+        print(f"Failed to set SCHED_RR for PID {os.getpid()}. Error code: {err}")
+    else:
+        print(f"Successfully set SCHED_RR for PID {os.getpid()}.")
+
 
 print("Initializing Ray...")
 try:
@@ -272,7 +285,7 @@ def run_inference_on_directory(image_dir):
     print(f"Ray worker process started with PID: {os.getpid()}")
     
     # Apply and check scheduling for the Ray worker process
-    apply_and_check_scheduling()
+    set_sched_rr()
 
     model = load_model()
     results = {}
