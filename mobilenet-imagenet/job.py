@@ -294,7 +294,7 @@ def run_inference_on_directory(image_dir):
     print(f"Ray worker process started with PID: {os.getpid()}")
     
     # Apply and check scheduling for the Ray worker process
-    set_sched_rr_all_threads(priority=99)
+    # set_sched_rr_all_threads(priority=99)
 
     model = load_model()
     results = {}
