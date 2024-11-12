@@ -227,20 +227,28 @@ from ctypes.util import find_library
 #     except Exception as e:
 #         print(f"Error applying `chrt`: {e}")
 
-def set_sched_rr():
+def set_sched_rr_all_threads(priority=90):
     libc = ctypes.CDLL(find_library("c"), use_errno=True)
-    SCHED_RR = 2 
+    SCHED_RR = 2
 
     class SchedParam(ctypes.Structure):
         _fields_ = [("sched_priority", ctypes.c_int)]
-    pid = 0 
-    param = SchedParam(sched_priority=90) 
-    result = libc.sched_setscheduler(pid, SCHED_RR, ctypes.pointer(param))
-    if result != 0:
-        err = ctypes.get_errno()
-        print(f"Failed to set SCHED_RR for PID {os.getpid()}. Error code: {err} - {os.strerror(err)}")
-    else:
-        print(f"Successfully set SCHED_RR for PID {os.getpid()}.")
+
+    main_pid = os.getpid()
+    task_dir = f"/proc/{main_pid}/task/"
+    
+    try:
+        for tid in os.listdir(task_dir):
+            tid = int(tid)
+            param = SchedParam(sched_priority=priority)
+            result = libc.sched_setscheduler(tid, SCHED_RR, ctypes.pointer(param))
+            if result != 0:
+                err = ctypes.get_errno()
+                print(f"Failed to set SCHED_RR for TID {tid}. Error code: {err} - {os.strerror(err)}")
+            else:
+                print(f"Successfully set SCHED_RR for TID {tid}.")
+    except Exception as e:
+        print(f"Error applying `SCHED_RR` to all threads: {e}")
 
 
 print("Initializing Ray...")
@@ -286,7 +294,7 @@ def run_inference_on_directory(image_dir):
     print(f"Ray worker process started with PID: {os.getpid()}")
     
     # Apply and check scheduling for the Ray worker process
-    set_sched_rr()
+    set_sched_rr_all_threads(priority=99)
 
     model = load_model()
     results = {}
