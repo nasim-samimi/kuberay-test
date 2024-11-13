@@ -280,8 +280,7 @@ def preprocess_image(image_path):
     img = preprocess(img)
     return img.unsqueeze(0)
 
-def infer_image(image_path, model):
-    img = preprocess_image(image_path)
+def infer_image(img, model):
     start_time = time.time()
     with torch.no_grad():
         preds = model(img)
@@ -306,8 +305,9 @@ def run_inference_on_directory(image_dir):
     for img_file in os.listdir(image_dir):
         img_path = os.path.join(image_dir, img_file)
         if os.path.isfile(img_path):
+            img = preprocess_image(img_path)
             start_time = time.time()
-            predicted_class = infer_image(img_path, model)
+            predicted_class = infer_image(img, model)
             end_time = time.time()
             results[img_file] = {"class": predicted_class, "time": end_time - start_time}
             response_times.append(end_time - start_time)
