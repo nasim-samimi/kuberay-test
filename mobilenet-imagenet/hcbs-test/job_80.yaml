@@ -7,8 +7,8 @@ spec:
   entrypoint: |
     python mobilenet-imagenet/job.py
   runtimeEnvYAML: |
-    pip:
-      - pandas
+    #pip:
+      #- pandas
     #  - torchvision
     #  - numpy
     working_dir: "https://github.com/nasim-samimi/kuberay-test/archive/refs/heads/main.zip"
@@ -24,10 +24,14 @@ spec:
       # Pod template
       template:
         spec:
-          nodeName: ray1
+          #nodeName: ray1
           containers:
             - name: ray-head
-              image: nasimm/mobilenet-serve:latest
+              image: nasimm/mobilenet-serve:rt
+              securityContext:
+                runAsUser: 0
+                capabilities:
+                  add: ["SYS_NICE"]
               ports:
                 - containerPort: 6379
                   name: gcs-server
@@ -69,7 +73,11 @@ spec:
                 resourceClaimTemplateName: rt.example.com
             containers:
               - name: ray-worker
-                image: nasimm/mobilenet-serve:latest
+                image: nasimm/mobilenet-serve:rt
+                securityContext:
+                  runAsUser: 0
+                  capabilities:
+                    add: ["SYS_NICE"]
                 resources:
                   claims:
                     - name: rtcpu
@@ -100,4 +108,28 @@ metadata:
 spec:
   count: 1
   runtime: 80000
+  period: 100000
+
+---
+apiVersion: resource.k8s.io/v1alpha2
+kind: ResourceClaimTemplate
+metadata:
+  name: rt-head
+spec:
+  spec:
+    resourceClassName: rt.example.com
+    parametersRef:
+      apiGroup: rt.resource.example.com
+      kind: RtClaimParameters
+      name: rtclaims-head
+
+---
+
+apiVersion: rt.resource.example.com/v1alpha1
+kind: RtClaimParameters
+metadata:
+  name: rtclaims-head
+spec:
+  count: 1
+  runtime: 50000
   period: 100000
