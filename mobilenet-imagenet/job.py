@@ -312,7 +312,7 @@ def run_inference_on_directory(image_dir):
             results[img_file] = {"class": predicted_class, "time": end_time - start_time}
             response_times.append(end_time - start_time)
         i+=1
-        if (i%500)==0:
+        if (i%100)==0:
             print(i)
     print("Inference completed.")
 
