@@ -1,0 +1,79 @@
+apiVersion: ray.io/v1
+kind: RayJob
+metadata:
+  name: rayjob-mobilenet
+spec:
+  shutdownAfterJobFinishes: false
+  entrypoint: |
+    python mobilenet-imagenet/job.py
+  runtimeEnvYAML: |
+    #pip:
+      #- pandas
+    #  - torchvision
+    #  - numpy
+    working_dir: "https://github.com/nasim-samimi/kuberay-test/archive/refs/heads/main.zip"
+    # env_vars:
+    #   NUM_WORKERS: "2"
+    #   CPUS_PER_WORKER: "2"
+
+  # rayClusterSpec specifies the RayCluster instance to be created by the RayJob controller.
+  rayClusterSpec:
+    rayVersion: '2.9.0'
+    headGroupSpec:
+      rayStartParams: {}
+      # Pod template
+      template:
+        spec:
+          nodeName: ray1
+          containers:
+            - name: ray-head
+              image: nasimm/mobilenet-serve:rt
+              securityContext:
+                runAsUser: 0
+                capabilities:
+                  add: ["SYS_NICE"]
+              ports:
+                - containerPort: 6379
+                  name: gcs-server
+                - containerPort: 8265 # Ray dashboard
+                  name: dashboard
+                - containerPort: 10001
+                  name: client
+              resources:
+                limits:
+                  cpu: "800m"
+                  memory: "3Gi"
+                requests:
+                  cpu: "800m"
+                  memory: "3Gi"
+              env:
+                - name: RESPONSE_TIME_PATH
+                  value: "/tmp/ray/response_times_80_cfs.csv"
+              volumeMounts:
+                - name: response-time-volume
+                  mountPath: /tmp/ray  # Mount hostPath volume to /tmp in the container
+          volumes:
+            - name: response-time-volume
+              hostPath:
+                path: /tmp/ray  # Path on the host node
+                type: DirectoryOrCreate
+    workerGroupSpecs:
+      - replicas: 4
+        minReplicas: 1
+        maxReplicas: 10
+        groupName: small-group
+        rayStartParams: {}
+        # Pod template
+        template:
+          spec:
+            nodeName: ray2
+            containers:
+              - name: ray-worker
+                image: nasimm/mobilenet-serve:rt
+                resources:
+                  limits:
+                    cpu: "500m"
+                    memory: "4Gi"
+                  requests:
+                    cpu: "500m"
+                    memory: "4Gi"
