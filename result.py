@@ -14,19 +14,23 @@ test1, test2 = sys.argv[1], sys.argv[2]
 results_dir1 = f"results/{test1}-test/"
 results_dir2 = f"results/{test2}-test/"
 
+font_size = 16
+
 def get_results(results_dir):  # Read from response_times.csv
     data = pd.DataFrame()
+    all_data=pd.DataFrame()
     for file in sorted(os.listdir(results_dir)):
         if file.endswith(".csv"):
             name = file.split(".")[0]
             cpu_time = int(''.join(filter(str.isdigit, name)))  # Extract integer value from filename
             df = pd.read_csv(os.path.join(results_dir, file))
-            data[f"cpu_utilisation={cpu_time}"] = df["response_time"]
-    return data
+            data[f"{cpu_time}%"] = df["response_time"]
+            all_data = pd.concat([all_data, df["response_time"]], axis=0)
+    return data, all_data
 
 # Load data for both tests
-data1 = get_results(results_dir1)
-data2 = get_results(results_dir2)
+data1,test1_all_data = get_results(results_dir1)
+data2,test2_all_data = get_results(results_dir2)
 
 # Descriptive Statistics
 print("Descriptive Statistics for CFS:")
@@ -43,7 +47,6 @@ plt.ylabel("Frequency")
 plt.title("Histogram of Response Times")
 plt.legend()
 plt.savefig("results/histogram_comparison.png")
-plt.show()
 
 # Box Plot for Comparison
 plt.figure(figsize=(10, 5))
@@ -55,9 +58,10 @@ plt.ylabel("Response Time")
 plt.grid(axis='both')
 plt.title("Response Time Comparison Between Scheduling Policies")
 plt.savefig("results/boxplot_comparison.png")
-plt.show()
 
 # Cumulative Distribution Function (CDF)
+
+
 
 for column in data1.columns:
     plt.figure(figsize=(10, 5))
@@ -76,30 +80,64 @@ for column in data1.columns:
     plt.title("CDF of Response Times")
     plt.legend()
     plt.savefig(f"results/cdf_comparison_{column}.png")
-    plt.show()
+
+# CDF Calculation and Plotting for Combined Data
+def cdf_plot(test1_all_data, test2_all_data, test1, test2):
+    plt.figure(figsize=(10, 5))
+    sorted_data1 = np.sort(test1_all_data["response_time"].dropna()) 
+    print(sorted_data1)
+    yvals1 = np.arange(1, len(sorted_data1) + 1) / float(len(sorted_data1))  # Calculate CDF values
+    plt.plot(sorted_data1, yvals1, label=f"{test1}", linestyle=':')
+
+    sorted_data2 = np.sort(test2_all_data["response_time"].dropna())  # Sort data for second dataset
+    print(sorted_data2)
+    yvals2 = np.arange(1, len(sorted_data2) + 1) / float(len(sorted_data2))  # Calculate CDF values
+    plt.plot(sorted_data2, yvals2, linestyle='--', label=f"{test2}")
+
+    plt.xlabel("Response Time")
+    plt.ylabel("Cumulative Probability")
+    plt.title("CDF of Response Times")
+    plt.legend()
+    plt.savefig("results/cdf_comparison_combined.png")
+# plt.show()
 
 # Statistical Tests
 # Flatten the data for each test for global comparison
 data1_flat = data1.values.flatten()
 data2_flat = data2.values.flatten()
 
-# T-test and Mann-Whitney U test
-t_stat, t_pval = ttest_ind(data1_flat, data2_flat, nan_policy='omit')
-mwu_stat, mwu_pval = mannwhitneyu(data1_flat, data2_flat, alternative="two-sided")
+def plot_max_fps_comparison(test1, test2, data1, data2):
+    # Calculate maximum FPS for each column in data1 and data2
+    max_fps1 = 1 / data1.max()  # Calculate maximum FPS for test1
+    max_fps2 = 1 / data2.max()  # Calculate maximum FPS for test2
 
-print(f"T-test p-value: {t_pval}")
-print(f"Mann-Whitney U test p-value: {mwu_pval}")
+    red_color = '#d62d20'  
+    blue_color = '#0057e7'
 
-# Save summary statistics
-summary_stats = pd.DataFrame({
-    f"{test1} Mean": [data1_flat.mean()],
-    f"{test2} Mean": [data2_flat.mean()],
-    f"{test1} Median": [np.median(data1_flat)],
-    f"{test2} Median": [np.median(data2_flat)],
-    f"{test1} Std Dev": [data1_flat.std()],
-    f"{test2} Std Dev": [data2_flat.std()],
-    "T-test p-value": [t_pval],
-    "Mann-Whitney U p-value": [mwu_pval]
-})
-summary_stats.to_csv("summary_statistics.csv", index=False)
-print("\nSummary statistics saved as summary_statistics.csv")
+    max_fps1 = max_fps1.replace([np.inf, -np.inf], np.nan).fillna(0)
+    max_fps2 = max_fps2.replace([np.inf, -np.inf], np.nan).fillna(0)
+
+    # Create a plot showing both maximum FPS values for each column
+    plt.figure(figsize=(8, 5))
+    width = 0.35  # Width of the bars
+    x = np.arange(len(max_fps1.index))  # X-axis positions for data1 columns
+
+    # Plot bars for data1 and data2
+    plt.bar(x - width/2, max_fps1, width, label=f"{test1} - Max FPS",  alpha=0.4, edgecolor='black')
+    plt.bar(x + width/2, max_fps2, width, label=f"{test2} - Max FPS",  alpha=0.4, edgecolor='black')
+
+    # Labeling the graph
+    plt.ylabel("Maximum FPS")
+    plt.xlabel("CPU Utilisation")
+    plt.title(f"Maximum FPS Comparison for {test1} and {test2}")
+    plt.xticks(x, max_fps1.index)
+    plt.legend()
+    plt.tight_layout()
+    plt.grid()
+    plt.savefig("results/max_fps_comparison.png")
+
+
+# Plot for both tests
+plot_max_fps_comparison(test1, test2, data1, data2)
+
+# cdf_plot(test1_all_data, test2_all_data, test1, test2)

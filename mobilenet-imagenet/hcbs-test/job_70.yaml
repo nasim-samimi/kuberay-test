@@ -145,5 +145,5 @@ metadata:
   name: rtclaims-head
 spec:
   count: 1
-  runtime: 50000
+  runtime: 90000
   period: 100000
