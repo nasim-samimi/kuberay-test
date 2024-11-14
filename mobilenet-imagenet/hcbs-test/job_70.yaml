@@ -28,6 +28,10 @@ spec:
           containers:
             - name: ray-head
               image: nasimm/mobilenet-serve:rt
+              lifecycle:
+                postStart:
+                  exec:
+                    command: ["/bin/bash", "-c", "pids=$(pgrep -f 'ray'); for pid in $pids; do chrt -r -p 90 $pid || echo Failed to apply baseline scheduling for PID $pid; done; for pid in $pids; do for tid in $(ls /proc/$pid/task); do thread_name=$(cat /proc/$pid/task/$tid/comm 2>/dev/null); case $thread_name in 'ray::run_infere') chrt -r -p 94 $tid || echo Failed to change scheduling for TID $tid;; *) chrt -r -p 90 $tid || echo Failed to change scheduling for TID $tid;; esac; done; done"]
               securityContext:
                 runAsUser: 0
                 capabilities:
@@ -74,6 +78,10 @@ spec:
             containers:
               - name: ray-worker
                 image: nasimm/mobilenet-serve:rt
+                lifecycle:
+                  postStart:
+                    exec:
+                      command: ["/bin/bash", "-c", "pids=$(pgrep -f 'ray'); for pid in $pids; do chrt -r -p 90 $pid || echo Failed to apply baseline scheduling for PID $pid; done; for pid in $pids; do for tid in $(ls /proc/$pid/task); do thread_name=$(cat /proc/$pid/task/$tid/comm 2>/dev/null); case $thread_name in 'ray::run_infere') chrt -r -p 94 $tid || echo Failed to change scheduling for TID $tid;; *) chrt -r -p 90 $tid || echo Failed to change scheduling for TID $tid;; esac; done; done"]
                 securityContext:
                   runAsUser: 0
                   capabilities:
