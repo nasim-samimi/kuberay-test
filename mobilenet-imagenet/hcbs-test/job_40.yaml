@@ -25,6 +25,10 @@ spec:
       template:
         spec:
           #nodeName: ray1
+          resourceClaims:
+          - name: rtcpu-head
+            source:
+              resourceClaimTemplateName: rt-head
           containers:
             - name: ray-head
               image: nasimm/mobilenet-serve:rt
@@ -44,11 +48,13 @@ spec:
                 - containerPort: 10001
                   name: client
               resources:
+                claims:
+                  - name: rtcpu-head
                 limits:
-                  cpu: "500m"
+                  # cpu: "500m"
                   memory: "3Gi"
                 requests:
-                  cpu: "500m"
+                  # cpu: "500m"
                   memory: "3Gi"
               env:
                 - name: RESPONSE_TIME_PATH
