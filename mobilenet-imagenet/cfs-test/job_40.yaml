@@ -7,8 +7,8 @@ spec:
   entrypoint: |
     python mobilenet-imagenet/job.py
   runtimeEnvYAML: |
-    pip:
-      - pandas
+    #pip:
+      #- pandas
     #  - torchvision
     #  - numpy
     working_dir: "https://github.com/nasim-samimi/kuberay-test/archive/refs/heads/main.zip"
@@ -27,7 +27,11 @@ spec:
           nodeName: ray1
           containers:
             - name: ray-head
-              image: nasimm/mobilenet-serve:latest
+              image: nasimm/mobilenet-serve:rt
+              securityContext:
+                runAsUser: 0
+                capabilities:
+                  add: ["SYS_NICE"]
               ports:
                 - containerPort: 6379
                   name: gcs-server
@@ -65,7 +69,7 @@ spec:
             nodeName: ray2
             containers:
               - name: ray-worker
-                image: nasimm/mobilenet-serve:latest
+                image: nasimm/mobilenet-serve:rt
                 resources:
                   limits:
                     cpu: "400m"
