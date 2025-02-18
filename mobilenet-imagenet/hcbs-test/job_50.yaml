@@ -68,19 +68,19 @@ spec:
                 path: /tmp/ray  # Path on the host node
                 type: DirectoryOrCreate
     workerGroupSpecs:
-      - replicas: 4
+      - replicas: 1
         minReplicas: 1
         maxReplicas: 10
-        groupName: small-group
+        groupName: group1
         rayStartParams: {}
         # Pod template
         template:
           spec:
             # nodeName: ray2
             resourceClaims:
-            - name: rtcpu
+            - name: rtcpu-w1
               source:
-                resourceClaimTemplateName: rt.example.com
+                resourceClaimTemplateName: rt-worker
             containers:
               - name: ray-worker
                 image: nasimm/mobilenet-serve:rt
@@ -99,12 +99,105 @@ spec:
                     memory: "4Gi"
                   requests:
                     memory: "4Gi"
+      - replicas: 1
+        minReplicas: 1
+        maxReplicas: 10
+        groupName: group2
+        rayStartParams: {}
+        # Pod template
+        template:
+          spec:
+            # nodeName: ray2
+            resourceClaims:
+            - name: rtcpu-w2
+              source:
+                resourceClaimTemplateName: rt-worker
+            containers:
+              - name: ray-worker
+                image: nasimm/mobilenet-serve:rt
+                lifecycle:
+                  postStart:
+                    exec:
+                      command: ["/bin/bash", "-c", "pids=$(pgrep -f 'ray'); for pid in $pids; do chrt -r -p 90 $pid || echo Failed to apply baseline scheduling for PID $pid; done; for pid in $pids; do for tid in $(ls /proc/$pid/task); do thread_name=$(cat /proc/$pid/task/$tid/comm 2>/dev/null); case $thread_name in 'ray::run_infere') chrt -r -p 94 $tid || echo Failed to change scheduling for TID $tid;; *) chrt -r -p 90 $tid || echo Failed to change scheduling for TID $tid;; esac; done; done"]
+                securityContext:
+                  runAsUser: 0
+                  capabilities:
+                    add: ["SYS_NICE"]
+                resources:
+                  claims:
+                    - name: rtcpu
+                  limits:
+                    memory: "4Gi"
+                  requests:
+                    memory: "4Gi"
+      - replicas: 1
+        minReplicas: 1
+        maxReplicas: 10
+        groupName: group3
+        rayStartParams: {}
+        # Pod template
+        template:
+          spec:
+            # nodeName: ray2
+            resourceClaims:
+            - name: rtcpu-w3
+              source:
+                resourceClaimTemplateName: rt-worker
+            containers:
+              - name: ray-worker
+                image: nasimm/mobilenet-serve:rt
+                lifecycle:
+                  postStart:
+                    exec:
+                      command: ["/bin/bash", "-c", "pids=$(pgrep -f 'ray'); for pid in $pids; do chrt -r -p 90 $pid || echo Failed to apply baseline scheduling for PID $pid; done; for pid in $pids; do for tid in $(ls /proc/$pid/task); do thread_name=$(cat /proc/$pid/task/$tid/comm 2>/dev/null); case $thread_name in 'ray::run_infere') chrt -r -p 94 $tid || echo Failed to change scheduling for TID $tid;; *) chrt -r -p 90 $tid || echo Failed to change scheduling for TID $tid;; esac; done; done"]
+                securityContext:
+                  runAsUser: 0
+                  capabilities:
+                    add: ["SYS_NICE"]
+                resources:
+                  claims:
+                    - name: rtcpu
+                  limits:
+                    memory: "4Gi"
+                  requests:
+                    memory: "4Gi"
+      - replicas: 1
+        minReplicas: 1
+        maxReplicas: 10
+        groupName: group4
+        rayStartParams: {}
+        # Pod template
+        template:
+          spec:
+            # nodeName: ray2
+            resourceClaims:
+            - name: rtcpu-w4
+              source:
+                resourceClaimTemplateName: rt-worker
+            containers:
+              - name: ray-worker
+                image: nasimm/mobilenet-serve:rt
+                lifecycle:
+                  postStart:
+                    exec:
+                      command: ["/bin/bash", "-c", "pids=$(pgrep -f 'ray'); for pid in $pids; do chrt -r -p 90 $pid || echo Failed to apply baseline scheduling for PID $pid; done; for pid in $pids; do for tid in $(ls /proc/$pid/task); do thread_name=$(cat /proc/$pid/task/$tid/comm 2>/dev/null); case $thread_name in 'ray::run_infere') chrt -r -p 94 $tid || echo Failed to change scheduling for TID $tid;; *) chrt -r -p 90 $tid || echo Failed to change scheduling for TID $tid;; esac; done; done"]
+                securityContext:
+                  runAsUser: 0
+                  capabilities:
+                    add: ["SYS_NICE"]
+                resources:
+                  claims:
+                    - name: rtcpu-w4
+                  limits:
+                    memory: "4Gi"
+                  requests:
+                    memory: "4Gi"
 
 ---
 apiVersion: resource.k8s.io/v1alpha2
 kind: ResourceClaimTemplate
 metadata:
-  name: rt.example.com
+  name: rt-worker
 spec:
   spec:
     resourceClassName: rt.example.com
