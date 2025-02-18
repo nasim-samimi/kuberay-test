@@ -94,7 +94,7 @@ spec:
                     add: ["SYS_NICE"]
                 resources:
                   claims:
-                    - name: rtcpu
+                    - name: rtcpu-w1
                   limits:
                     memory: "4Gi"
                   requests:
@@ -125,7 +125,7 @@ spec:
                     add: ["SYS_NICE"]
                 resources:
                   claims:
-                    - name: rtcpu
+                    - name: rtcpu-w2
                   limits:
                     memory: "4Gi"
                   requests:
@@ -156,7 +156,7 @@ spec:
                     add: ["SYS_NICE"]
                 resources:
                   claims:
-                    - name: rtcpu
+                    - name: rtcpu-w3
                   limits:
                     memory: "4Gi"
                   requests:
