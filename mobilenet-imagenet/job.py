@@ -167,7 +167,6 @@ def run_batch_inference(image_paths, batch_index):
 #         print(f"Inference error: {e}")
 
 if __name__ == "__main__":
-    ray.init(address="auto")  # ⚡ Connect to KubeRay cluster
 
     image_dir = "mobilenet-imagenet/images/test/"
     all_images = [os.path.join(image_dir, f) for f in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, f))]
