@@ -41,10 +41,10 @@ spec:
                   name: client
               resources:
                 limits:
-                  cpu: "900m"
+                  cpu: "2"
                   memory: "3Gi"
                 requests:
-                  cpu: "900m"
+                  cpu: "2"
                   memory: "3Gi"
               env:
                 - name: RESPONSE_TIME_PATH
