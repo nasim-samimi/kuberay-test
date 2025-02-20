@@ -172,7 +172,7 @@ if __name__ == "__main__":
     all_images = [os.path.join(image_dir, f) for f in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, f))]
 
     # ⚡ Split images into batches (batch size can be adjusted)
-    batch_size = 100
+    batch_size = 50
     image_batches = [all_images[i:i + batch_size] for i in range(0, len(all_images), batch_size)]
 
     # ⚡ Launch parallel Ray tasks (one per batch)
