@@ -58,10 +58,67 @@ spec:
                 path: /tmp/ray  # Path on the host node
                 type: DirectoryOrCreate
     workerGroupSpecs:
-      - replicas: 4
+      - replicas: 1
         minReplicas: 1
         maxReplicas: 10
-        groupName: small-group
+        groupName: group-w1
+        rayStartParams: {}
+        # Pod template
+        template:
+          spec:
+            nodeName: ray2
+            containers:
+              - name: ray-worker
+                image: nasimm/mobilenet-serve:rt
+                resources:
+                  limits:
+                    cpu: "500m"
+                    memory: "4Gi"
+                  requests:
+                    cpu: "500m"
+                    memory: "4Gi"
+      - replicas: 1
+        minReplicas: 1
+        maxReplicas: 10
+        groupName: group-w2
+        rayStartParams: {}
+        # Pod template
+        template:
+          spec:
+            nodeName: ray2
+            containers:
+              - name: ray-worker
+                image: nasimm/mobilenet-serve:rt
+                resources:
+                  limits:
+                    cpu: "500m"
+                    memory: "4Gi"
+                  requests:
+                    cpu: "500m"
+                    memory: "4Gi"
+      - replicas: 1
+        minReplicas: 1
+        maxReplicas: 10
+        groupName: group-w3
+        rayStartParams: {}
+        # Pod template
+        template:
+          spec:
+            nodeName: ray2
+            containers:
+              - name: ray-worker
+                image: nasimm/mobilenet-serve:rt
+                resources:
+                  limits:
+                    cpu: "500m"
+                    memory: "4Gi"
+                  requests:
+                    cpu: "500m"
+                    memory: "4Gi"
+      - replicas: 1
+        minReplicas: 1
+        maxReplicas: 10
+        groupName: group-w4
         rayStartParams: {}
         # Pod template
         template:
