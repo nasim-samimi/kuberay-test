@@ -143,7 +143,7 @@ def run_batch_inference(image_paths, batch_index):
         image_name = os.path.basename(img_path)
 
         # Collect results
-        results.append({"image": image_name, "predicted_class": predicted_class.item(), "inference_time": inference_time})
+        results.append({"image": image_name, "predicted_class": predicted_class.item(), "response_time": inference_time})
         response_times.append(inference_time)
 
     # try:
