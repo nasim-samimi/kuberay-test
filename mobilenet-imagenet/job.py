@@ -68,8 +68,8 @@ preprocess = transforms.Compose([
 
 def load_model():
     print("Loading model...")
-    # model = models.mobilenet_v2(weights=MobileNet_V2_Weights.IMAGENET1K_V1)
-    model = efficientnet_b0(weights=EfficientNet_B0_Weights.IMAGENET1K_V1)
+    model = models.mobilenet_v2(weights=MobileNet_V2_Weights.IMAGENET1K_V1)
+    # model = efficientnet_b0(weights=EfficientNet_B0_Weights.IMAGENET1K_V1)
     model.eval()
     print("Model loaded.")
     return model
