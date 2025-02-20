@@ -26,7 +26,7 @@ spec:
         spec:
           nodeName: ray1
           containers:
-            - name: ray-head
+            - name: ray-head10
               image: nasimm/mobilenet-serve:rt
               securityContext:
                 runAsUser: 0
@@ -61,14 +61,14 @@ spec:
       - replicas: 4
         minReplicas: 1
         maxReplicas: 10
-        groupName: small-group
+        groupName: group-w1
         rayStartParams: {}
         # Pod template
         template:
           spec:
             nodeName: ray1
             containers:
-              - name: ray-worker
+              - name: ray-worker10
                 image: nasimm/mobilenet-serve:rt
                 resources:
                   limits:

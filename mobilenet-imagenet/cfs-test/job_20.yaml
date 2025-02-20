@@ -1,7 +1,7 @@
 apiVersion: ray.io/v1
 kind: RayJob
 metadata:
-  name: rayjob-mobilenet
+  name: rayjob-mobilenet20
 spec:
   shutdownAfterJobFinishes: false
   entrypoint: |
