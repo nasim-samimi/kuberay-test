@@ -58,7 +58,7 @@ spec:
                 path: /tmp/ray  # Path on the host node
                 type: DirectoryOrCreate
     workerGroupSpecs:
-      - replicas: 4
+      - replicas: 2
         minReplicas: 1
         maxReplicas: 10
         groupName: small-group
