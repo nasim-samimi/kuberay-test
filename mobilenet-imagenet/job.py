@@ -92,9 +92,6 @@ def infer_image(img, model):
 @ray.remote
 def run_inference_on_directory(image_dir):
     print(f"Ray worker process started with PID: {os.getpid()}")
-    
-    # Apply and check scheduling for the Ray worker process
-    # set_sched_rr_all_threads(priority=99)
 
     model = load_model()
     results = {}
@@ -125,14 +122,69 @@ def run_inference_on_directory(image_dir):
 
     return results
 
-if __name__ == "__main__":
-    
-    image_dir = "mobilenet-imagenet/images/test/"
-    print(f"Running inference on images in directory: {image_dir}")
+@ray.remote(num_cpus=1)  # ⚡ Explicit resource allocation for Ray workers
+def run_batch_inference(image_paths, batch_index):
+    model = load_model()
+    results = []
+    response_times = []
+    response_times_path = os.getenv("RESPONSE_TIME_PATH", "response_times.csv")
 
+
+    # Process each image separately for exact timing
+    for img_path in image_paths:
+        img = preprocess_image(img_path)
+        start_time = time.time()
+        with torch.no_grad():
+            prediction = model(img)
+        end_time = time.time()
+
+        _, predicted_class = torch.max(prediction, 1)
+        inference_time = end_time - start_time
+        image_name = os.path.basename(img_path)
+
+        # Collect results
+        results.append({"image": image_name, "predicted_class": predicted_class.item(), "inference_time": inference_time})
+        response_times.append(inference_time)
+
+    # try:
+    #     pd.DataFrame(response_times, columns=["response_time"]).to_csv(response_times_path, index=False)
+    #     print("Response times saved successfully.")
+    # except Exception as e:
+    #     print(f"Error saving response times: {e}")
+
+    return results
+
+# if __name__ == "__main__":
+    
+#     image_dir = "mobilenet-imagenet/images/test/"
+#     print(f"Running inference on images in directory: {image_dir}")
+
+#     try:
+#         inference_results = ray.get(run_inference_on_directory.remote(image_dir))
+#         for image_file, prediction in inference_results.items():
+#             print(f"Image: {image_file}, Prediction: {prediction['class']}")
+#     except Exception as e:
+#         print(f"Inference error: {e}")
+
+if __name__ == "__main__":
+    ray.init(address="auto")  # ⚡ Connect to KubeRay cluster
+
+    image_dir = "mobilenet-imagenet/images/test/"
+    all_images = [os.path.join(image_dir, f) for f in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, f))]
+
+    # ⚡ Split images into batches (batch size can be adjusted)
+    batch_size = 10
+    image_batches = [all_images[i:i + batch_size] for i in range(0, len(all_images), batch_size)]
+
+    # ⚡ Launch parallel Ray tasks (one per batch)
+    futures = [run_batch_inference.remote(batch, idx) for idx, batch in enumerate(image_batches)]
+    all_results = ray.get(futures)
+
+    # 📁 Combine all batches into a single CSV
+    combined_results = [item for batch_result in all_results for item in batch_result]
+    response_times_path = os.getenv("RESPONSE_TIME_PATH", "response_times.csv")
     try:
-        inference_results = ray.get(run_inference_on_directory.remote(image_dir))
-        for image_file, prediction in inference_results.items():
-            print(f"Image: {image_file}, Prediction: {prediction['class']}")
+        pd.DataFrame(combined_results).to_csv(response_times_path, index=False)
+        print(f"All batches combined into final_inference_results.csv successfully.")
     except Exception as e:
-        print(f"Inference error: {e}")
+        print(f"Error saving combined CSV: {e}")
