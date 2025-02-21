@@ -7,8 +7,8 @@ spec:
   entrypoint: |
     python mobilenet-imagenet/job.py
   runtimeEnvYAML: |
-    pip:
-      - pandas
+    #pip:
+      #- pandas
     #  - torchvision
     #  - numpy
     working_dir: "https://github.com/nasim-samimi/kuberay-test/archive/refs/heads/main.zip"
