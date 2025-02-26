@@ -1,0 +1,149 @@
+apiVersion: ray.io/v1
+kind: RayJob
+metadata:
+  name: rayjob-mobilenet
+spec:
+  shutdownAfterJobFinishes: false
+  entrypoint: |
+    python mobilenet-imagenet/job_effnet.py
+  runtimeEnvYAML: |
+    #pip:
+      #- pandas
+    #  - torchvision
+    #  - numpy
+    working_dir: "https://github.com/nasim-samimi/kuberay-test/archive/refs/heads/main.zip"
+    # env_vars:
+    #   NUM_WORKERS: "2"
+    #   CPUS_PER_WORKER: "2"
+
+  # rayClusterSpec specifies the RayCluster instance to be created by the RayJob controller.
+  rayClusterSpec:
+    rayVersion: '2.9.0'
+    headGroupSpec:
+      rayStartParams: {}
+      # Pod template
+      template:
+        spec:
+          #nodeName: ray1
+          resourceClaims:
+          - name: rtcpu-head
+            source:
+              resourceClaimTemplateName: rt-head
+          containers:
+            - name: ray-head
+              image: nasimm/mobilenet-serve:rt
+              lifecycle:
+                postStart:
+                  exec:
+                    command: ["/bin/bash", "-c", "pids=$(pgrep -f 'ray'); for pid in $pids; do chrt -r -p 90 $pid || echo Failed to apply baseline scheduling for PID $pid; done; for pid in $pids; do for tid in $(ls /proc/$pid/task); do thread_name=$(cat /proc/$pid/task/$tid/comm 2>/dev/null); case $thread_name in 'ray::run_infere') chrt -r -p 94 $tid || echo Failed to change scheduling for TID $tid;; *) chrt -r -p 90 $tid || echo Failed to change scheduling for TID $tid;; esac; done; done"]
+              securityContext:
+                runAsUser: 0
+                capabilities:
+                  add: ["SYS_NICE"]
+              ports:
+                - containerPort: 6379
+                  name: gcs-server
+                - containerPort: 8265 # Ray dashboard
+                  name: dashboard
+                - containerPort: 10001
+                  name: client
+              resources:
+                claims:
+                  - name: rtcpu-head
+                limits:
+                  # cpu: "500m"
+                  memory: "3Gi"
+                requests:
+                  # cpu: "500m"
+                  memory: "3Gi"
+              env:
+                - name: RESPONSE_TIME_PATH
+                  value: "/tmp/ray/response_times_20_hcbs.csv"
+              volumeMounts:
+                - name: response-time-volume
+                  mountPath: /tmp/ray  # Mount hostPath volume to /tmp in the container
+          volumes:
+            - name: response-time-volume
+              hostPath:
+                path: /tmp/ray  # Path on the host node
+                type: DirectoryOrCreate
+    workerGroupSpecs:
+      - replicas: 4
+        minReplicas: 1
+        maxReplicas: 10
+        groupName: small-group
+        rayStartParams: {}
+        # Pod template
+        template:
+          spec:
+            # nodeName: ray2
+            resourceClaims:
+            - name: rtcpu
+              source:
+                resourceClaimTemplateName: rt.example.com
+            containers:
+              - name: ray-worker
+                image: nasimm/mobilenet-serve:rt
+                lifecycle:
+                  postStart:
+                    exec:
+                      command: ["/bin/bash", "-c", "pids=$(pgrep -f 'ray'); for pid in $pids; do chrt -r -p 90 $pid || echo Failed to apply baseline scheduling for PID $pid; done; for pid in $pids; do for tid in $(ls /proc/$pid/task); do thread_name=$(cat /proc/$pid/task/$tid/comm 2>/dev/null); case $thread_name in 'ray::run_infere') chrt -r -p 94 $tid || echo Failed to change scheduling for TID $tid;; *) chrt -r -p 90 $tid || echo Failed to change scheduling for TID $tid;; esac; done; done"]
+                securityContext:
+                  runAsUser: 0
+                  capabilities:
+                    add: ["SYS_NICE"]
+                resources:
+                  claims:
+                    - name: rtcpu
+                  limits:
+                    memory: "4Gi"
+                  requests:
+                    memory: "4Gi"
+
+---
+apiVersion: resource.k8s.io/v1alpha2
+kind: ResourceClaimTemplate
+metadata:
+  name: rt.example.com
+spec:
+  spec:
+    resourceClassName: rt.example.com
+    parametersRef:
+      apiGroup: rt.resource.example.com
+      kind: RtClaimParameters
+      name: rtclaims
+
+---
+
+apiVersion: rt.resource.example.com/v1alpha1
+kind: RtClaimParameters
+metadata:
+  name: rtclaims
+spec:
+  count: 1
+  runtime: 20000
+  period: 100000
+
+---
+apiVersion: resource.k8s.io/v1alpha2
+kind: ResourceClaimTemplate
+metadata:
+  name: rt-head
+spec:
+  spec:
+    resourceClassName: rt.example.com
+    parametersRef:
+      apiGroup: rt.resource.example.com
+      kind: RtClaimParameters
+      name: rtclaims-head
+
+---
+
+apiVersion: rt.resource.example.com/v1alpha1
+kind: RtClaimParameters
+metadata:
+  name: rtclaims-head
+spec:
+  count: 1
+  runtime: 90000
+  period: 100000
