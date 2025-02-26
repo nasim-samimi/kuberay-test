@@ -122,7 +122,7 @@ def run_inference_on_directory(image_dir):
 
     return results
 
-@ray.remote(num_cpus=1)  # ⚡ Explicit resource allocation for Ray workers
+@ray.remote
 def run_batch_inference(image_paths, batch_index):
     model = load_model()
     results = []
