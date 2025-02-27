@@ -68,8 +68,8 @@ preprocess = transforms.Compose([
 
 def load_model():
     print("Loading model...")
-    model = models.mobilenet_v2(weights=MobileNet_V2_Weights.IMAGENET1K_V1)
-    # model = efficientnet_b0(weights=EfficientNet_B0_Weights.IMAGENET1K_V1)
+    # model = models.mobilenet_v2(weights=MobileNet_V2_Weights.IMAGENET1K_V1)
+    model = efficientnet_b0(weights=EfficientNet_B0_Weights.IMAGENET1K_V1)
     model.eval()
     print("Model loaded.")
     return model
@@ -122,7 +122,7 @@ def run_inference_on_directory(image_dir):
 
     return results
 
-@ray.remote
+@ray.remote(num_cpus=1)  
 def run_batch_inference(image_paths, batch_index):
     model = load_model()
     results = []
@@ -179,7 +179,6 @@ if __name__ == "__main__":
     futures = [run_batch_inference.remote(batch, idx) for idx, batch in enumerate(image_batches)]
     all_results = ray.get(futures)
 
-    # 📁 Combine all batches into a single CSV
     combined_results = [item for batch_result in all_results for item in batch_result]
     response_times_path = os.getenv("RESPONSE_TIME_PATH", "response_times.csv")
     try:

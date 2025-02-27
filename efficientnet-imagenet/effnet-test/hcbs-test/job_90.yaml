@@ -5,7 +5,7 @@ metadata:
 spec:
   shutdownAfterJobFinishes: false
   entrypoint: |
-    python mobilenet-imagenet/job.py
+    python mobilenet-imagenet/job_effnet.py
   runtimeEnvYAML: |
     #pip:
       #- pandas
